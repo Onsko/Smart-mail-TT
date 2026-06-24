@@ -1,0 +1,22 @@
+[
+  {
+    "_id": { "$oid": "665000000000000000000601" },
+    "courrierId": { "$oid": "665000000000000000000201" },
+    "contenu": "Madame, Monsieur,\n\nNous avons bien reçu votre réclamation concernant votre facture du mois de janvier 2026 et nous vous en remercions.\n\nAprès vérification de votre dossier, nous vous confirmons qu'un remboursement de 47 DT sera effectué sur votre prochaine facture.\n\nNous vous prions d'agréer, Madame, Monsieur, l'expression de nos salutations distinguées.\n\nService Commercial — Tunisie Telecom",
+    "brouillonIA": "Suite à votre réclamation relative au dépassement de forfait de 47 DT, nous avons procédé à la vérification de votre consommation. Après analyse, un avoir de 47 DT sera appliqué sur votre prochaine facture. Nous nous excusons pour la gêne occasionnée.",
+    "document": { "$oid": "665000000000000000000306" },
+    "envoyePar": { "$oid": "665000000000000000000107" },
+    "envoyeAt": { "$date": "2026-06-21T14:00:00.000Z" },
+    "statut": "envoye"
+  },
+  {
+    "_id": { "$oid": "665000000000000000000602" },
+    "courrierId": { "$oid": "665000000000000000000207" },
+    "contenu": "Madame, Monsieur,\n\nNous avons bien reçu votre courrier relatif au renouvellement du marché de support infrastructure n° DGSI-2026-0089.\n\nNous vous confirmons notre accord pour le renouvellement de ce contrat pour une durée d'un an, pour un montant de 850 000 DT HT.\n\nVeuillez trouver ci-joint le contrat signé.\n\nCordialement,\nDirection Financière — Tunisie Telecom",
+    "brouillonIA": "En réponse à votre demande de renouvellement du marché DGSI-2026-0089, nous confirmons notre accord pour une reconduction annuelle au même montant de 850 000 DT HT. Les documents contractuels vous seront transmis sous 48h.",
+    "document": null,
+    "envoyePar": { "$oid": "665000000000000000000109" },
+    "envoyeAt": { "$date": "2026-06-18T16:00:00.000Z" },
+    "statut": "envoye"
+  }
+]

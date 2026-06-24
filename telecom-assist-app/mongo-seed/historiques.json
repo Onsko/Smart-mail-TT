@@ -1,0 +1,102 @@
+[
+  {
+    "_id": { "$oid": "665000000000000000000501" },
+    "courrierId": { "$oid": "665000000000000000000201" },
+    "action": "creation",
+    "description": "Courrier enregistré par le Bureau d'Ordre",
+    "ancienneValeur": null,
+    "nouvelleValeur": "nouveau",
+    "userId": { "$oid": "665000000000000000000102" },
+    "createdAt": { "$date": "2026-06-18T09:35:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000502" },
+    "courrierId": { "$oid": "665000000000000000000201" },
+    "action": "affectation_service",
+    "description": "Affecté au service Commercial par le Directeur",
+    "ancienneValeur": null,
+    "nouvelleValeur": "Commercial",
+    "userId": { "$oid": "665000000000000000000103" },
+    "createdAt": { "$date": "2026-06-18T14:00:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000503" },
+    "courrierId": { "$oid": "665000000000000000000201" },
+    "action": "affectation_agent",
+    "description": "Assigné à l'agent Olfa Romdhani",
+    "ancienneValeur": null,
+    "nouvelleValeur": "Olfa Romdhani",
+    "userId": { "$oid": "665000000000000000000105" },
+    "createdAt": { "$date": "2026-06-19T09:00:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000504" },
+    "courrierId": { "$oid": "665000000000000000000201" },
+    "action": "statut_change",
+    "description": "Statut mis à jour : en cours de traitement",
+    "ancienneValeur": "nouveau",
+    "nouvelleValeur": "en_cours",
+    "userId": { "$oid": "665000000000000000000107" },
+    "createdAt": { "$date": "2026-06-20T11:00:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000505" },
+    "courrierId": { "$oid": "665000000000000000000202" },
+    "action": "creation",
+    "description": "Courrier enregistré par le Bureau d'Ordre",
+    "ancienneValeur": null,
+    "nouvelleValeur": "nouveau",
+    "userId": { "$oid": "665000000000000000000102" },
+    "createdAt": { "$date": "2026-06-18T10:05:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000506" },
+    "courrierId": { "$oid": "665000000000000000000202" },
+    "action": "affectation_service",
+    "description": "Affecté au service Technique par le Directeur",
+    "ancienneValeur": null,
+    "nouvelleValeur": "Technique",
+    "userId": { "$oid": "665000000000000000000103" },
+    "createdAt": { "$date": "2026-06-18T15:30:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000507" },
+    "courrierId": { "$oid": "665000000000000000000202" },
+    "action": "affectation_agent",
+    "description": "Assigné à l'agent Yassine Khaldi",
+    "ancienneValeur": null,
+    "nouvelleValeur": "Yassine Khaldi",
+    "userId": { "$oid": "665000000000000000000104" },
+    "createdAt": { "$date": "2026-06-19T08:00:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000508" },
+    "courrierId": { "$oid": "665000000000000000000206" },
+    "action": "creation",
+    "description": "Courrier sortant créé par le Bureau d'Ordre",
+    "ancienneValeur": null,
+    "nouvelleValeur": "nouveau",
+    "userId": { "$oid": "665000000000000000000102" },
+    "createdAt": { "$date": "2026-06-21T13:00:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000509" },
+    "courrierId": { "$oid": "665000000000000000000206" },
+    "action": "reponse_envoyee",
+    "description": "Réponse officielle envoyée au destinataire",
+    "ancienneValeur": "brouillon",
+    "nouvelleValeur": "traite",
+    "userId": { "$oid": "665000000000000000000107" },
+    "createdAt": { "$date": "2026-06-21T14:00:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000510" },
+    "courrierId": { "$oid": "665000000000000000000207" },
+    "action": "cloture",
+    "description": "Courrier clôturé — marché renouvelé",
+    "ancienneValeur": "en_cours",
+    "nouvelleValeur": "traite",
+    "userId": { "$oid": "665000000000000000000109" },
+    "createdAt": { "$date": "2026-06-18T16:00:00.000Z" }
+  }
+]

@@ -1,0 +1,34 @@
+[
+  {
+    "_id": { "$oid": "665000000000000000000001" },
+    "nom": "Technique",
+    "description": "Service en charge des infrastructures réseau, fibre optique et interventions techniques.",
+    "actif": true,
+    "createdAt": { "$date": "2026-01-01T08:00:00.000Z" },
+    "updatedAt": { "$date": "2026-01-01T08:00:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000002" },
+    "nom": "Commercial",
+    "description": "Service en charge des relations clients, contrats et offres commerciales.",
+    "actif": true,
+    "createdAt": { "$date": "2026-01-01T08:00:00.000Z" },
+    "updatedAt": { "$date": "2026-01-01T08:00:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000003" },
+    "nom": "RH",
+    "description": "Service des ressources humaines : recrutement, paie, stages et gestion du personnel.",
+    "actif": true,
+    "createdAt": { "$date": "2026-01-01T08:00:00.000Z" },
+    "updatedAt": { "$date": "2026-01-01T08:00:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000004" },
+    "nom": "Financier",
+    "description": "Service en charge de la comptabilité, factures et marchés financiers.",
+    "actif": true,
+    "createdAt": { "$date": "2026-01-01T08:00:00.000Z" },
+    "updatedAt": { "$date": "2026-01-01T08:00:00.000Z" }
+  }
+]

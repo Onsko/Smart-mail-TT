@@ -1,0 +1,128 @@
+[
+  {
+    "_id": { "$oid": "665000000000000000000401" },
+    "courrierId": { "$oid": "665000000000000000000201" },
+    "resume": "Client conteste un dépassement de forfait de 47 DT sur sa facture de janvier. Il demande un remboursement et une explication détaillée des consommations.",
+    "categorie": "Reclamation",
+    "serviceSuggere": { "$oid": "665000000000000000000002" },
+    "prioriteSuggere": "haute",
+    "motsCles": ["réclamation", "facture", "dépassement", "forfait", "remboursement"],
+    "entitesDetectees": {
+      "expediteur": "Mohamed Trabelsi",
+      "numContrat": "CTR-2024-00892",
+      "dateDocument": "2026-06-15",
+      "montant": "47 DT"
+    },
+    "texteOCR": "Objet : Réclamation concernant ma facture du mois de janvier 2026. Je constate un dépassement injustifié de 47 dinars sur mon forfait mensuel...",
+    "scoreConfiance": 0.94,
+    "createdAt": { "$date": "2026-06-18T09:36:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000402" },
+    "courrierId": { "$oid": "665000000000000000000202" },
+    "resume": "Demande de raccordement FTTH pour un local commercial situé Avenue Bourguiba, Tunis. Délai souhaité 15 jours.",
+    "categorie": "Demande",
+    "serviceSuggere": { "$oid": "665000000000000000000001" },
+    "prioriteSuggere": "moyenne",
+    "motsCles": ["raccordement", "fibre", "FTTH", "local commercial", "Avenue Bourguiba"],
+    "entitesDetectees": {
+      "expediteur": "Société Médina SARL",
+      "numContrat": null,
+      "dateDocument": "2026-06-17",
+      "montant": null
+    },
+    "texteOCR": "Nous souhaitons bénéficier d'un raccordement en fibre optique FTTH pour notre local commercial situé au 14 Avenue Bourguiba, Tunis...",
+    "scoreConfiance": 0.97,
+    "createdAt": { "$date": "2026-06-18T10:06:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000403" },
+    "courrierId": { "$oid": "665000000000000000000203" },
+    "resume": "Facture mensuelle d'électricité STEG — 12 480 DT TTC, échéance 30 juin 2026.",
+    "categorie": "Facture",
+    "serviceSuggere": { "$oid": "665000000000000000000004" },
+    "prioriteSuggere": "moyenne",
+    "motsCles": ["facture", "électricité", "STEG", "échéance", "paiement"],
+    "entitesDetectees": {
+      "expediteur": "STEG",
+      "numContrat": "STEG-2026-06-TT",
+      "dateDocument": "2026-06-10",
+      "montant": "12 480 DT"
+    },
+    "texteOCR": "Facture n° STEG-2026-06-TT — Montant dû : 12 480,000 DT TTC — Date limite de paiement : 30/06/2026...",
+    "scoreConfiance": 0.99,
+    "createdAt": { "$date": "2026-06-17T08:11:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000404" },
+    "courrierId": { "$oid": "665000000000000000000204" },
+    "resume": "Candidature spontanée pour poste d'ingénieur réseau. 4 ans d'expérience chez Ooredoo. Disponibilité immédiate.",
+    "categorie": "Autre",
+    "serviceSuggere": { "$oid": "665000000000000000000003" },
+    "prioriteSuggere": "basse",
+    "motsCles": ["candidature", "ingénieur réseau", "recrutement", "expérience", "disponible"],
+    "entitesDetectees": {
+      "expediteur": "Sarra Ben Ali",
+      "numContrat": null,
+      "dateDocument": "2026-06-16",
+      "montant": null
+    },
+    "texteOCR": "Madame, Monsieur, Je me permets de vous adresser ma candidature spontanée pour un poste d'ingénieur réseau au sein de Tunisie Telecom...",
+    "scoreConfiance": 0.89,
+    "createdAt": { "$date": "2026-06-17T09:06:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000405" },
+    "courrierId": { "$oid": "665000000000000000000205" },
+    "resume": "Proposition de mutualisation d'infrastructure fibre dans la région de Sfax. Durée 5 ans, économie estimée 2,4 MDT.",
+    "categorie": "Demande",
+    "serviceSuggere": { "$oid": "665000000000000000000001" },
+    "prioriteSuggere": "haute",
+    "motsCles": ["partenariat", "fibre", "Sfax", "mutualisation", "infrastructure"],
+    "entitesDetectees": {
+      "expediteur": "Ooredoo Partners",
+      "numContrat": "PROP-OOR-2026-041",
+      "dateDocument": "2026-06-14",
+      "montant": "2 400 000 DT"
+    },
+    "texteOCR": "Dans le cadre du développement du réseau fibre dans la région de Sfax, Ooredoo Partners propose un accord de mutualisation d'infrastructure...",
+    "scoreConfiance": 0.96,
+    "createdAt": { "$date": "2026-06-16T10:11:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000406" },
+    "courrierId": { "$oid": "665000000000000000000207" },
+    "resume": "Renouvellement du marché annuel de support infrastructure, contrat DGSI-2026-0089, montant 850 000 DT.",
+    "categorie": "Autre",
+    "serviceSuggere": { "$oid": "665000000000000000000004" },
+    "prioriteSuggere": "moyenne",
+    "motsCles": ["marché", "renouvellement", "support", "infrastructure", "contrat"],
+    "entitesDetectees": {
+      "expediteur": "DGSI",
+      "numContrat": "DGSI-2026-0089",
+      "dateDocument": "2026-06-13",
+      "montant": "850 000 DT"
+    },
+    "texteOCR": "Objet : Renouvellement du marché de support infrastructure n° DGSI-2026-0089. Montant annuel : 850 000 DT HT...",
+    "scoreConfiance": 0.98,
+    "createdAt": { "$date": "2026-06-15T08:16:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000407" },
+    "courrierId": { "$oid": "665000000000000000000208" },
+    "resume": "Coupure totale d'une liaison entreprise dédiée — secteur Sousse Nord depuis 48h. Impact direct sur la production du client.",
+    "categorie": "Reclamation",
+    "serviceSuggere": { "$oid": "665000000000000000000001" },
+    "prioriteSuggere": "haute",
+    "motsCles": ["panne", "coupure", "liaison", "Sousse", "urgence", "réseau"],
+    "entitesDetectees": {
+      "expediteur": "PharmaGroup Sousse",
+      "numContrat": "ENT-2025-00341",
+      "dateDocument": "2026-06-14",
+      "montant": null
+    },
+    "texteOCR": "Depuis 48 heures, notre liaison entreprise dédiée est totalement coupée dans le secteur Sousse Nord. Cette panne impacte directement notre production...",
+    "scoreConfiance": 0.95,
+    "createdAt": { "$date": "2026-06-14T07:11:00.000Z" }
+  }
+]

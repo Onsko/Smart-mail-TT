@@ -1,0 +1,74 @@
+[
+  {
+    "_id": { "$oid": "665000000000000000000701" },
+    "userId": { "$oid": "665000000000000000000103" },
+    "message": "Nouveau courrier à affecter : Réclamation facture janvier — M. Trabelsi (Priorité : Haute)",
+    "type": "nouveau_courrier",
+    "lu": true,
+    "lienCourrier": { "$oid": "665000000000000000000201" },
+    "createdAt": { "$date": "2026-06-18T09:36:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000702" },
+    "userId": { "$oid": "665000000000000000000103" },
+    "message": "Nouveau courrier à affecter : Demande raccordement fibre — Société Médina SARL",
+    "type": "nouveau_courrier",
+    "lu": true,
+    "lienCourrier": { "$oid": "665000000000000000000202" },
+    "createdAt": { "$date": "2026-06-18T10:06:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000703" },
+    "userId": { "$oid": "665000000000000000000103" },
+    "message": "Nouveau courrier à affecter : Proposition partenariat fibre Sfax — Ooredoo Partners (Priorité : Haute)",
+    "type": "nouveau_courrier",
+    "lu": false,
+    "lienCourrier": { "$oid": "665000000000000000000205" },
+    "createdAt": { "$date": "2026-06-16T10:11:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000704" },
+    "userId": { "$oid": "665000000000000000000104" },
+    "message": "Nouveau courrier assigné à votre service : Demande raccordement fibre — priorité Moyenne",
+    "type": "affectation",
+    "lu": true,
+    "lienCourrier": { "$oid": "665000000000000000000202" },
+    "createdAt": { "$date": "2026-06-18T15:31:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000705" },
+    "userId": { "$oid": "665000000000000000000106" },
+    "message": "Courrier assigné : Demande raccordement fibre — Société Médina SARL",
+    "type": "affectation",
+    "lu": false,
+    "lienCourrier": { "$oid": "665000000000000000000202" },
+    "createdAt": { "$date": "2026-06-19T08:01:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000706" },
+    "userId": { "$oid": "665000000000000000000107" },
+    "message": "Courrier assigné : Réclamation facture janvier — Mohamed Trabelsi (Priorité : Haute)",
+    "type": "affectation",
+    "lu": true,
+    "lienCourrier": { "$oid": "665000000000000000000201" },
+    "createdAt": { "$date": "2026-06-19T09:01:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000707" },
+    "userId": { "$oid": "665000000000000000000110" },
+    "message": "Votre courrier TT-2026-000421 est en cours de traitement",
+    "type": "statut_change",
+    "lu": false,
+    "lienCourrier": { "$oid": "665000000000000000000201" },
+    "createdAt": { "$date": "2026-06-20T11:01:00.000Z" }
+  },
+  {
+    "_id": { "$oid": "665000000000000000000708" },
+    "userId": { "$oid": "665000000000000000000104" },
+    "message": "Urgent : Panne ligne entreprise Sousse Nord — Priorité Haute assignée à votre service",
+    "type": "nouveau_courrier",
+    "lu": false,
+    "lienCourrier": { "$oid": "665000000000000000000208" },
+    "createdAt": { "$date": "2026-06-14T07:12:00.000Z" }
+  }
+]

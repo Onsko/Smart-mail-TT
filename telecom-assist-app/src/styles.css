@@ -1,0 +1,123 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Sora", "Inter", system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-deep: var(--primary-deep);
+  --color-primary-bright: var(--primary-bright);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-success: var(--success);
+  --color-info: var(--info);
+  --color-prio-mid: var(--prio-mid);
+  --color-prio-high: var(--prio-high);
+  --color-ai: var(--ai);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+}
+
+:root {
+  --radius: 0.625rem;
+
+  /* Brand */
+  --primary-deep: oklch(0.42 0.13 252);   /* #0A4A8C */
+  --primary-bright: oklch(0.58 0.16 248); /* #1477C9 */
+
+  --background: oklch(0.975 0.005 240);    /* #F4F6F9 */
+  --foreground: oklch(0.20 0.04 255);      /* #0E1E33 */
+  --card: oklch(1 0 0);
+  --card-foreground: var(--foreground);
+  --popover: oklch(1 0 0);
+  --popover-foreground: var(--foreground);
+
+  --primary: var(--primary-deep);
+  --primary-foreground: oklch(1 0 0);
+
+  --secondary: oklch(0.96 0.01 240);
+  --secondary-foreground: var(--foreground);
+  --muted: oklch(0.95 0.01 240);
+  --muted-foreground: oklch(0.50 0.02 255);
+  --accent: oklch(0.93 0.04 245);
+  --accent-foreground: var(--primary-deep);
+  --destructive: oklch(0.60 0.22 25);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.90 0.01 245);
+  --input: oklch(0.92 0.01 245);
+  --ring: var(--primary-bright);
+
+  /* Status / semantic */
+  --success: oklch(0.74 0.13 190);   /* #2EC4B6 teal */
+  --info: oklch(0.50 0.18 320);      /* #8B3FA8 violet */
+  --prio-mid: oklch(0.60 0.22 0);    /* #D6377B magenta */
+  --prio-high: oklch(0.72 0.18 55);  /* #F7941D orange */
+  --ai: oklch(0.86 0.16 95);         /* #FDB913 yellow */
+
+  --sidebar: var(--primary-deep);
+  --sidebar-foreground: oklch(0.97 0.01 240);
+  --sidebar-accent: oklch(0.35 0.12 252);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(0.35 0.10 252);
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  html, body { font-family: var(--font-sans); }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.01em; }
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer utilities {
+  .bg-hero-gradient {
+    background-image: linear-gradient(135deg, #0A4A8C 0%, #0E5DAE 55%, #1477C9 100%);
+  }
+  .bg-dot-pattern {
+    background-image: radial-gradient(rgba(255,255,255,0.10) 1px, transparent 1px);
+    background-size: 18px 18px;
+  }
+  .bg-ai-tint {
+    background-color: color-mix(in oklab, var(--color-ai) 14%, white);
+  }
+}
