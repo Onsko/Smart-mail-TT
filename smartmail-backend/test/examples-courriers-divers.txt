@@ -1,0 +1,232 @@
+================================================================================
+EXEMPLE 1 — Réclamation technique (fibre, format classique avec signature bas)
+================================================================================
+
+Tunis, le 15 juin 2026
+
+Monsieur le Directeur Technique,
+
+Objet : Réclamation suite à des coupures internet répétées — Référence client 47821-B
+
+Je me permets de vous signaler un incident technique de grande ampleur affectant la connectivité fibre de notre entreprise située au 18 rue de l'Industrie, Tunis. Depuis le début du mois, nous constatons des interruptions prolongées et aléatoires qui rendent impossible l'accès aux services cloud et aux visioconférences.
+
+Ces dysfonctionnements ont déjà entraîné un retard considérable sur nos projets en cours et une perte financière estimée à plusieurs milliers de dinars. Nous vous demandons d'intervenir en urgence pour rétablir la stabilité du service et de nous communiquer un plan d'actions correctives sous 48 heures.
+
+Dans l'attente de votre retour, je vous prie d'agréer, Monsieur le Directeur Technique, l'expression de mes salutations distinguées.
+
+
+Karim Ben Salah
+Responsable IT — Société Tunisienne des Équipements
+Email : k.bensalah@ste.tn
+
+
+================================================================================
+EXEMPLE 2 — Contentieux facturation (facture impayée, ton formel, sans lieu explicite)
+================================================================================
+
+À l'attention du Service Clientèle
+
+Sfax, le 03/07/2026
+
+Objet : Contestation de facture N° 2026-0847 et demande de régularisation
+
+Madame, Monsieur,
+
+Je vous adresse ce courrier afin de contester la facture du mois de juin 2026, dont le montant de 1 240 DT ne correspond en aucun cas à la consommation réelle de notre ligne. Depuis le changement de forfait effectué le 12 mai, nous avons constaté des frais supplémentaires récurrents non justifiés.
+
+Je vous demande de bien vouloir procéder à une vérification complète de notre compte et d'annuler les montants indus. À défaut de régularisation dans un délai de 15 jours, je me verrai dans l'obligation de saisir les instances compétentes.
+
+Veuillez trouver ci-joint les justificatifs nécessaires.
+
+Cordialement,
+
+Fatma Jaziri
+Directrice Administrative — Clinique El Amen
+Tél. : 74 123 456
+
+
+================================================================================
+EXEMPLE 3 — Demande administrative de résiliation (ton calme, structuré)
+================================================================================
+
+Le 22 mai 2026
+Sousse
+
+Objet : Demande de résiliation de la ligne fixe N° 72 345 678
+
+Bonjour,
+
+Conformément aux conditions contractuelles, je vous informe de ma décision de résilier la ligne fixe souscrite sous le numéro 72 345 678, à compter du 30 juin 2026. Cette décision intervient suite à un déménagement de nos locaux vers une zone non couverte par votre service.
+
+Je vous prie de bien vouloir me transmettre le détail des démarches à suivre, ainsi que la date effective de clôture du contrat et les éventuels frais de résiliation applicables.
+
+Je vous remercie pour votre compréhension et reste disponible pour tout complément d'information.
+
+Salutations,
+
+
+Mohamed Trabelsi
+Gérant — Bureau d'Études Méditerranée
+
+
+================================================================================
+EXEMPLE 4 — Incident critique réseau mobile (urgence, ton alarmiste, avec lieu en début)
+================================================================================
+
+Gabès, le 29 juin 2026
+
+Objet : Panne majeure du réseau mobile dans la zone industrielle de Gabès — intervention urgente requise
+
+Monsieur le Responsable des Réseaux,
+
+Je vous contacte au sujet d'une panne majeure affectant la couverture mobile dans la zone industrielle de Gabès. Depuis hier après-midi, les équipes sur le terrain ne parviennent pas à établir des appels ni à accéder aux données mobiles, ce qui perturbe gravement la coordination des opérations de sécurité.
+
+Cette situation est critique et requiert une intervention immédiate de vos équipes techniques. Nous avons besoin d'un diagnostic sous 24 heures et d'un rétablissement progressif du service dans les plus brefs délais.
+
+Votre réactivité sera déterminante pour la continuité de nos activités.
+
+Cordialement,
+
+
+Sami Gharbi
+Chef de Sécurité — Complexe Industriel du Sud
+Mobile : 98 765 432
+
+
+================================================================================
+EXEMPLE 5 — Proposition commerciale / partenariat (ton professionnel, non réclamatoire)
+================================================================================
+
+Le 10 juin 2026
+Ariana, Tunisie
+
+Objet : Proposition de partenariat pour la connectivité des nouvelles zones d'activité
+
+Monsieur le Directeur Commercial,
+
+Je me permets de vous contacter au nom de la société NextZone Développement, active dans l'aménagement de parcs d'activités économiques. Nous souhaitons explorer un partenariat avec Tunisie Télécom pour équiper en fibre optique nos futurs sites situés à Ariana, La Soukra et Ennasr.
+
+Le premier projet concerne un ensemble de 32 lots professionnels avec une livraison prévue au quatrième trimestre 2026. Nous serions intéressés par une offre groupée incluant connectivité internet, téléphonie fixe et solutions de sécurité réseau.
+
+Je vous propose de nous rencontrer la semaine prochaine pour affiner les besoins et évaluer les modalités techniques et financières.
+
+Dans l'attente de votre réponse, je vous prie d'agréer, Monsieur le Directeur Commercial, l'expression de mes salutations distinguées.
+
+
+Inès Bouzid
+Directrice Générale — NextZone Développement
+iness.bouzid@nextzone.tn
+
+
+================================================================================
+EXEMPLE 6 — Demande de support technique classique (courte, avec date numérique)
+================================================================================
+
+Le 01/06/2026
+Nabeul
+
+Objet : Demande d'assistance pour migration de la messagerie professionnelle
+
+Bonjour,
+
+Nous rencontrons des difficultés lors de la migration de notre messagerie professionnelle vers la nouvelle plateforme cloud que vous avez mise à disposition. Plusieurs collaborateurs ne reçoivent plus leurs emails depuis hier et l'accès au webmail affiche une erreur d'authentification.
+
+Pourriez-vous nous aider à résoudre ce problème rapidement ? Je reste joignable sur le numéro 92 111 222 pour toute information complémentaire.
+
+Merci d'avance pour votre aide.
+
+Cordialement,
+
+
+Hichem Dridi
+Administrateur Système — Hôtel Les Orangers
+
+
+================================================================================
+EXEMPLE 7 — Lettre de mise en demeure (ton juridique, priorité haute)
+================================================================================
+
+Tunis, le 12 juin 2026
+
+Objet : Mise en demeure pour non-respect des engagements contractuels — Contrat N° C-2025-4412
+
+Monsieur le Directeur Juridique,
+
+Par la présente, nous vous mettons en demeure de respecter les engagements contractuels liés au contrat N° C-2025-4412, notamment la garantie de disponibilité de service annoncée à 99,9 %. Les multiples interruptions constatées depuis le mois de mars constituent une faute contractuelle grave.
+
+Nous vous demandons d'apporter une solution définitive dans un délai de 7 jours ouvrés, faute de quoi nous saisirons le tribunal compétent et réclamerons des dommages et intérêts pour préjudice subi.
+
+Nous vous prions d'agréer, Monsieur, nos salutations distinguées.
+
+
+Mehdi Karray
+Avocat — Cabinet Karray & Associés
+
+
+================================================================================
+EXEMPLE 8 — Demande d'information simple (ton neutre, sans urgence apparente)
+================================================================================
+
+Bizerte, le 25 juin 2026
+
+Objet : Demande de catalogue et de tarifs des offres entreprises
+
+Bonjour,
+
+Dans le cadre de l'évolution de nos outils de communication, nous souhaitons recevoir votre catalogue des offres destinées aux entreprises, accompagné des tarifs applicables pour les PME de moins de 50 salariés.
+
+Nous serions également intéressés par une présentation des options de central téléphonique et de connexion internet dédiée.
+
+Merci de nous faire parvenir ces documents à votre convenance.
+
+Cordialement,
+
+
+Raoudha Ferchichi
+Assistante de Direction — Pêcheries du Nord
+
+
+================================================================================
+EXEMPLE 9 — Réclamation urgente avec données mobiles (ton direct, date textuelle)
+================================================================================
+
+Le vingt-trois juin 2026
+Kairouan
+
+Objet : Réclamation urgente — consommation excessive de données mobiles
+
+Monsieur,
+
+Je vous contacte pour vous informer d'une consommation excessive de données constatée sur le forfait mobile de notre collaborateur. Bien qu'il soit connecté principalement au Wi-Fi, les données mobiles ont atteint 18 Go en une semaine, ce qui nous semble anormal.
+
+Nous demandons une analyse détaillée de cette consommation et le remboursement des frais indus. Cette situation est urgente car elle impacte notre budget de téléphonie mobile.
+
+Cordialement,
+
+
+Amir Mzoughi
+Responsable Achats — Groupe Agro-Kairouan
+
+
+================================================================================
+EXEMPLE 10 — Demande de rendez-vous pour installation (ton cordial, avec lieu)
+================================================================================
+
+Tunis, le 5 juin 2026
+
+Objet : Demande de rendez-vous pour installation de ligne entreprise
+
+Madame, Monsieur,
+
+Suite à la souscription de notre contrat entreprise référencé CE-2026-0055, nous souhaiterions fixer un rendez-vous avec votre équipe technique pour l'installation de la ligne fibre au siège de notre société, situé au 7 avenue Habib Bourguiba, Tunis.
+
+Nous sommes disponibles les mardi et jeudi matin à partir de 9h00. Merci de nous confirmer la date et l'heure qui vous conviennent.
+
+Dans l'attente de votre retour, je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.
+
+
+Nadia Sahnoun
+Responsable des Opérations — Startup DataViz
+
+
+================================================================================

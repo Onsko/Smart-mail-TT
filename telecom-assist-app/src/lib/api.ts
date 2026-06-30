@@ -113,3 +113,131 @@ export const usersApi = {
   delete: (id: string) =>
     request<void>(`/users/${id}`, { method: 'DELETE' }),
 };
+
+export type CourrierType = 'ENTRANT' | 'SORTANT';
+export type CourrierCategorie = 'RECLAMATION' | 'DEMANDE' | 'FACTURE' | 'INFORMATION' | 'AUTRE';
+export type CourrierDomaine = 'TECHNIQUE' | 'RH' | 'FINANCE' | 'COMMERCIAL' | 'AUTRE';
+export type CourrierPriorite = 'HAUTE' | 'MOYENNE' | 'BASSE';
+export type CourrierStatut = 'NOUVEAU' | 'A_AFFECTER' | 'A_TRAITER' | 'EN_COURS' | 'TRAITE' | 'REJETE' | 'EN_ATTENTE' | 'CLOTURE';
+
+export interface CreateCourrierPayload {
+  type: CourrierType;
+  date?: string;
+  nombrePieces?: number;
+  correspondant?: string;
+  objet: string;
+  contenu?: string;
+  observation?: string;
+  categorie?: CourrierCategorie;
+  domaine?: CourrierDomaine;
+  priorite?: CourrierPriorite;
+  statut?: CourrierStatut;
+  documents?: string[];
+}
+
+export interface Courrier {
+  _id: string;
+  reference: string;
+  type: CourrierType;
+  date?: string;
+  nombrePieces?: number;
+  correspondant?: string;
+  objet: string;
+  contenu?: string;
+  observation?: string;
+  categorie?: CourrierCategorie;
+  domaine?: CourrierDomaine;
+  priorite?: CourrierPriorite;
+  statut?: CourrierStatut;
+  service?: { _id: string; code: string; name: string } | null;
+  agentAssigne?: { _id: string; nom: string; prenom: string; email: string } | null;
+  resumeIA?: string;
+  documents?: string[];
+  historique?: { action: string; date: string; user?: string }[];
+  extractionsIA?: Record<string, unknown> | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ExtractedFields {
+  correspondant: string;
+  objet: string;
+  contenu: string;
+  categorie: CourrierCategorie;
+  domaine: CourrierDomaine;
+  priorite: CourrierPriorite;
+  date?: string;
+  lieu?: string;
+}
+
+export interface Service {
+  _id: string;
+  code: string;
+  name: string;
+  description?: string;
+  agents?: { _id: string; nom: string; prenom: string; email: string }[];
+}
+
+export interface Recommendation {
+  resume: string;
+  serviceId: string | null;
+  serviceCode: string | null;
+  serviceName: string | null;
+  priorite: CourrierPriorite;
+  similarCount: number;
+}
+
+export const courriersApi = {
+  getAll: () => request<Courrier[]>('/courriers'),
+  getById: (id: string) => request<Courrier>(`/courriers/${id}`),
+  create: (payload: CreateCourrierPayload) =>
+    request<Courrier>('/courriers', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  attachDocument: (id: string, url: string) =>
+    request<Courrier>(`/courriers/${id}/documents`, {
+      method: 'PATCH',
+      body: JSON.stringify({ url }),
+    }),
+  extract: (id: string, url: string, mimeType: string) =>
+    request<ExtractedFields>(`/courriers/${id}/extraire`, {
+      method: 'POST',
+      body: JSON.stringify({ url, mimeType }),
+    }),
+  extractStandalone: (url: string, mimeType: string) =>
+    request<ExtractedFields>('/courriers/extraire', {
+      method: 'POST',
+      body: JSON.stringify({ url, mimeType }),
+    }),
+  getPendingForDirector: () => request<Courrier[]>('/courriers/directeur/pending'),
+  getRecommendations: (id: string) => request<Recommendation>(`/courriers/${id}/recommandations`),
+  assignService: (id: string, service: string, agentAssigne?: string) =>
+    request<Courrier>(`/courriers/${id}/affecter`, {
+      method: 'PATCH',
+      body: JSON.stringify({ service, agentAssigne }),
+    }),
+  validateDirector: (id: string, priorite?: CourrierPriorite) =>
+    request<Courrier>(`/courriers/${id}/valider`, {
+      method: 'PATCH',
+      body: JSON.stringify({ priorite }),
+    }),
+};
+
+export const servicesApi = {
+  getAll: () => request<Service[]>('/services'),
+};
+
+export async function uploadDocument(file: File): Promise<{ url: string; filename: string; originalName: string }> {
+  const token = getToken();
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await fetch(`${BASE}/courriers/documents/upload`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message ?? 'Erreur upload');
+  return data;
+}
