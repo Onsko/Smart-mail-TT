@@ -69,6 +69,20 @@ export class CourriersController {
     return this.courriersService.extractFromDocument(relativePath, body.mimeType);
   }
 
+  @Get('ollama/status')
+  @Roles(Role.BO, Role.SUPER_ADMIN, Role.DIRECTEUR)
+  async ollamaStatus() {
+    return this.courriersService.getOllamaStatus();
+  }
+
+  @Post('analyse-ollama')
+  @Roles(Role.BO, Role.SUPER_ADMIN)
+  async analyseOllama(@Body() body: { url: string; mimeType: string }) {
+    const uploadService = new UploadService();
+    const relativePath = uploadService.getRelativePath(body.url.split('/').pop() || '');
+    return this.courriersService.analyzeWithOllama(relativePath, body.mimeType);
+  }
+
   @Post(':id/extraire')
   @Roles(Role.BO, Role.SUPER_ADMIN)
   async extract(@Param('id') id: string, @Body() body: { url: string; mimeType: string }) {
@@ -94,6 +108,12 @@ export class CourriersController {
   @Roles(Role.DIRECTEUR, Role.SUPER_ADMIN)
   async getRecommendations(@Param('id') id: string) {
     return this.courriersService.getRecommendations(id);
+  }
+
+  @Post(':id/reanalyser-ollama')
+  @Roles(Role.DIRECTEUR, Role.SUPER_ADMIN, Role.BO)
+  async reanalyserOllama(@Param('id') id: string) {
+    return this.courriersService.reanalyserAvecOllama(id);
   }
 
   @Patch(':id/affecter')

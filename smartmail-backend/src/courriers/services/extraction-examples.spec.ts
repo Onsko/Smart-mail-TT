@@ -1,13 +1,15 @@
 import { OcrService } from './ocr.service';
 import { SummarizationService } from './summarization.service';
 import { RecommendationService } from './recommendation.service';
+import { OllamaService } from './ollama.service';
 import * as fs from 'fs';
 import * as path from 'path';
 
 describe('Extraction robustness on diverse courriers', () => {
   const ocr = new OcrService();
   const summarizer = new SummarizationService();
-  const recommendation = new RecommendationService({} as any, {} as any, summarizer);
+  const ollamaStub = { analyzeCourrier: () => null, isAvailable: () => false, getModelName: () => 'test' } as unknown as OllamaService;
+  const recommendation = new RecommendationService({} as any, {} as any, summarizer, ollamaStub);
 
   const examplesPath = path.join(__dirname, '../../../test/examples-courriers-divers.txt');
   const raw = fs.readFileSync(examplesPath, 'utf-8');

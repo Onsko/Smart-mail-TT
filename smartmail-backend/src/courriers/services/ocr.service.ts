@@ -44,8 +44,13 @@ export class OcrService implements OnModuleDestroy {
   private worker: any = null;
 
   async extractFromDocument(filePath: string, mimeType: string): Promise<ExtractionResult> {
-    this.logger.log(`Analyse IA du document : ${filePath} (${mimeType})`);
+    const rawText = await this.extractRawText(filePath, mimeType);
+    return this.analyzeText(rawText);
+  }
 
+  // Returns the raw OCR/PDF text without analysis (used by the Ollama layer).
+  async extractRawText(filePath: string, mimeType: string): Promise<string> {
+    this.logger.log(`Extraction texte du document : ${filePath} (${mimeType})`);
     let rawText = '';
 
     if (mimeType === 'application/pdf') {
@@ -66,7 +71,12 @@ export class OcrService implements OnModuleDestroy {
       }
     }
 
-    return this.analyzeText(rawText || '');
+    return rawText || '';
+  }
+
+  // Public wrapper so other services can reuse the heuristic analysis on raw text.
+  analyze(text: string): ExtractionResult {
+    return this.analyzeText(text || '');
   }
 
   private async getWorker() {

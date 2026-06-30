@@ -185,6 +185,20 @@ export interface Recommendation {
   serviceName: string | null;
   priorite: CourrierPriorite;
   similarCount: number;
+  source: 'ollama' | 'heuristique';
+}
+
+export interface OllamaExtraction extends ExtractedFields {
+  resume: string;
+  serviceCode: string | null;
+  serviceName: string | null;
+  serviceId: string | null;
+  source: 'ollama' | 'heuristique';
+}
+
+export interface OllamaStatus {
+  available: boolean;
+  model: string;
 }
 
 export const courriersApi = {
@@ -210,8 +224,15 @@ export const courriersApi = {
       method: 'POST',
       body: JSON.stringify({ url, mimeType }),
     }),
+  getOllamaStatus: () => request<OllamaStatus>('/courriers/ollama/status'),
+  analyzeWithOllama: (url: string, mimeType: string) =>
+    request<OllamaExtraction>('/courriers/analyse-ollama', {
+      method: 'POST',
+      body: JSON.stringify({ url, mimeType }),
+    }),
   getPendingForDirector: () => request<Courrier[]>('/courriers/directeur/pending'),
   getRecommendations: (id: string) => request<Recommendation>(`/courriers/${id}/recommandations`),
+  reanalyserOllama: (id: string) => request<Recommendation>(`/courriers/${id}/reanalyser-ollama`, { method: 'POST' }),
   assignService: (id: string, service: string, agentAssigne?: string) =>
     request<Courrier>(`/courriers/${id}/affecter`, {
       method: 'PATCH',

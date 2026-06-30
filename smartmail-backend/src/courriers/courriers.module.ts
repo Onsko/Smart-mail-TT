@@ -10,6 +10,7 @@ import { OcrService } from './services/ocr.service';
 import { UploadService } from './services/upload.service';
 import { SummarizationService } from './services/summarization.service';
 import { RecommendationService } from './services/recommendation.service';
+import { OllamaService } from './services/ollama.service';
 
 @Module({
   imports: [
@@ -20,7 +21,7 @@ import { RecommendationService } from './services/recommendation.service';
     ]),
   ],
   controllers: [CourriersController],
-  providers: [CourriersService, ReferenceService, OcrService, UploadService, SummarizationService, RecommendationService],
-  exports: [CourriersService, ReferenceService, OcrService, UploadService, SummarizationService, RecommendationService],
+  providers: [CourriersService, ReferenceService, OcrService, UploadService, SummarizationService, RecommendationService, OllamaService],
+  exports: [CourriersService, ReferenceService, OcrService, UploadService, SummarizationService, RecommendationService, OllamaService],
 })
 export class CourriersModule {}

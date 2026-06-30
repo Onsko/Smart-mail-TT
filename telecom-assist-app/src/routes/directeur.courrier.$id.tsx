@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { courriersApi, servicesApi, type Courrier, type Service, type Recommendation } from "@/lib/api";
 import { AIPanel } from "@/components/AIPanel";
 import { PriorityBadge, StatusBadge } from "@/components/StatusBadge";
-import { FileText, Clock, ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+import { FileText, Clock, ArrowRight, CheckCircle2, Loader2, Brain, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/directeur/courrier/$id")({
   component: CourrierDetail,
@@ -35,6 +35,8 @@ function CourrierDetail() {
   const [selectedPriority, setSelectedPriority] = useState<Courrier["priorite"]>("MOYENNE");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [reanalyzing, setReanalyzing] = useState(false);
+  const [ollamaAvailable, setOllamaAvailable] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   useEffect(() => {
@@ -53,7 +55,25 @@ function CourrierDetail() {
       })
       .catch(() => setMessage({ type: "error", text: "Impossible de charger le courrier." }))
       .finally(() => setLoading(false));
+
+    // Check Ollama availability in background
+    courriersApi.getOllamaStatus().then(s => setOllamaAvailable(s.available)).catch(() => setOllamaAvailable(false));
   }, [id]);
+
+  async function reanalyserOllama() {
+    setReanalyzing(true);
+    setMessage(null);
+    try {
+      const rec = await courriersApi.reanalyserOllama(id);
+      setRecommendation(rec);
+      if (rec.serviceId) setSelectedService(rec.serviceId);
+      setMessage({ type: "success", text: rec.source === "ollama" ? "Ré-analyse Ollama terminée." : "Ollama indisponible — résumé heuristique conservé." });
+    } catch (err) {
+      setMessage({ type: "error", text: err instanceof Error ? err.message : "Échec de la ré-analyse" });
+    } finally {
+      setReanalyzing(false);
+    }
+  }
 
   const selectedServiceObj = services.find(s => s._id === selectedService);
 
@@ -135,6 +155,17 @@ function CourrierDetail() {
 
         <div className="space-y-4">
           <AIPanel title="Analyse complète">
+            <div className="flex items-center gap-2 mb-2">
+              {recommendation?.source === "ollama" ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-800 text-xs font-medium px-2 py-0.5">
+                  <Brain className="h-3 w-3" /> Ollama
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5">
+                  <Sparkles className="h-3 w-3" /> Heuristique
+                </span>
+              )}
+            </div>
             <p className="text-sm leading-relaxed">{recommendation?.resume || "Résumé en cours de génération…"}</p>
             <div className="grid grid-cols-2 gap-3 pt-3 border-t border-ai/30">
               <div>
@@ -150,6 +181,17 @@ function CourrierDetail() {
                 <div className="font-medium">{recommendation?.similarCount ?? 0}</div>
               </div>
             </div>
+
+            {ollamaAvailable && (
+              <button
+                onClick={reanalyserOllama}
+                disabled={reanalyzing}
+                className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-md border border-ai/50 bg-ai/10 hover:bg-ai/20 text-amber-800 py-2 text-sm font-medium disabled:opacity-60"
+              >
+                {reanalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Brain className="h-4 w-4" />}
+                {reanalyzing ? "Ré-analyse Ollama en cours…" : "Ré-analyser avec Ollama"}
+              </button>
+            )}
           </AIPanel>
 
           <div className="rounded-xl border bg-card p-5 space-y-4">
