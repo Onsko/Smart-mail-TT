@@ -28,13 +28,19 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return data as T;
 }
 
+export interface ApiUserService {
+  _id: string;
+  code: string;
+  name: string;
+}
+
 export interface ApiUser {
   _id: string;
   nom: string;
   prenom: string;
   email: string;
   role: string;
-  service: string | null;
+  service: ApiUserService | string | null;
   actif: boolean;
 }
 
@@ -152,6 +158,8 @@ export interface Courrier {
   service?: { _id: string; code: string; name: string } | null;
   agentAssigne?: { _id: string; nom: string; prenom: string; email: string } | null;
   resumeIA?: string;
+  reponse?: string;
+  reponseEnvoyee?: boolean;
   documents?: string[];
   historique?: { action: string; date: string; user?: string }[];
   extractionsIA?: Record<string, unknown> | null;
@@ -201,6 +209,30 @@ export interface OllamaStatus {
   model: string;
 }
 
+export interface AgentCharge {
+  _id: string;
+  nom: string;
+  prenom: string;
+  email: string;
+  charge: number;
+  recommended: boolean;
+}
+
+export interface TrackedCourrier {
+  _id: string;
+  reference: string;
+  objet: string;
+  statut: string;
+  priorite: string;
+  correspondant: string;
+  createdAt: string;
+  reponse: string;
+  reponseEnvoyee: boolean;
+  service: { _id: string; name: string; code: string } | null;
+  agentAssigne: { _id: string; nom: string; prenom: string } | null;
+  historique: { action: string; date: string }[];
+}
+
 export const courriersApi = {
   getAll: () => request<Courrier[]>('/courriers'),
   getById: (id: string) => request<Courrier>(`/courriers/${id}`),
@@ -225,6 +257,21 @@ export const courriersApi = {
       body: JSON.stringify({ url, mimeType }),
     }),
   getOllamaStatus: () => request<OllamaStatus>('/courriers/ollama/status'),
+  iaReformuler: (text: string) =>
+    request<{ result: string | null }>('/courriers/ia/reformuler', {
+      method: 'POST',
+      body: JSON.stringify({ text }),
+    }),
+  iaResumer: (text: string) =>
+    request<{ result: string | null }>('/courriers/ia/resumer', {
+      method: 'POST',
+      body: JSON.stringify({ text }),
+    }),
+  iaGenererReponse: (objet: string, contenu: string) =>
+    request<{ result: string | null }>('/courriers/ia/generer-reponse', {
+      method: 'POST',
+      body: JSON.stringify({ objet, contenu }),
+    }),
   analyzeWithOllama: (url: string, mimeType: string) =>
     request<OllamaExtraction>('/courriers/analyse-ollama', {
       method: 'POST',
@@ -243,10 +290,45 @@ export const courriersApi = {
       method: 'PATCH',
       body: JSON.stringify({ priorite }),
     }),
+  getChefCourriers: () => request<Courrier[]>('/courriers/chef/mes-courriers'),
+  getAgentCourriers: () => request<Courrier[]>('/courriers/agent/mes-courriers'),
+  trackByReference: (reference: string) => request<TrackedCourrier>(`/courriers/suivi/${reference}`),
+  getAgentsCharge: () => request<{ serviceId: string; serviceName: string; agents: AgentCharge[] }>('/courriers/chef/agents-charge'),
+  assignAgent: (courrierId: string, agentId: string) =>
+    request<Courrier>(`/courriers/${courrierId}/assigner-agent`, {
+      method: 'POST',
+      body: JSON.stringify({ agentId }),
+    }),
+  updateStatut: (courrierId: string, statut: string) =>
+    request<Courrier>(`/courriers/${courrierId}/statut`, {
+      method: 'PATCH',
+      body: JSON.stringify({ statut }),
+    }),
+  saveReponse: (courrierId: string, reponse: string, envoyer: boolean) =>
+    request<Courrier>(`/courriers/${courrierId}/reponse`, {
+      method: 'PATCH',
+      body: JSON.stringify({ reponse, envoyer }),
+    }),
 };
 
 export const servicesApi = {
   getAll: () => request<Service[]>('/services'),
+};
+
+export interface NotificationItem {
+  _id: string;
+  message: string;
+  type: string;
+  read: boolean;
+  courrier?: { _id: string; reference: string; objet: string } | null;
+  createdAt: string;
+}
+
+export const notificationsApi = {
+  getAll: () => request<NotificationItem[]>('/notifications'),
+  getUnreadCount: () => request<{ count: number }>('/notifications/unread-count'),
+  markAsRead: (id: string) => request<{ success: boolean }>(`/notifications/${id}/read`, { method: 'PATCH' }),
+  markAllRead: () => request<{ success: boolean }>('/notifications/mark-all-read', { method: 'PATCH' }),
 };
 
 export async function uploadDocument(file: File): Promise<{ url: string; filename: string; originalName: string }> {

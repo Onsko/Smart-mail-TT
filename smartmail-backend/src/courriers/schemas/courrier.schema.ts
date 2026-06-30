@@ -94,6 +94,12 @@ export class Courrier {
   @Prop({ default: '' })
   resumeIA: string;
 
+  @Prop({ default: '' })
+  reponse: string;
+
+  @Prop({ default: false })
+  reponseEnvoyee: boolean;
+
   @Prop({ type: Object, default: null })
   extractionsIA: Record<string, unknown> | null;
 

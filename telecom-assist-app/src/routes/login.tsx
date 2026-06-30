@@ -29,11 +29,13 @@ function LoginPage() {
     try {
       const res = await authApi.login(email, password);
       saveToken(res.access_token);
+      const svc = typeof res.user.service === 'object' && res.user.service ? res.user.service : null;
       setSession({
         name: `${res.user.prenom} ${res.user.nom}`,
         email: res.user.email,
         role: res.user.role as Role,
-        service: res.user.service ?? undefined,
+        service: svc?.name,
+        serviceId: svc?._id,
       });
       navigate({ to: ROLE_HOME[res.user.role as Role] });
     } catch (err: unknown) {

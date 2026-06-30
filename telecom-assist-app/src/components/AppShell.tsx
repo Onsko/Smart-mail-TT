@@ -4,8 +4,9 @@ import { Logo } from "./Logo";
 import { clearSession, getSession, ROLE_LABEL, type Role, type SessionUser } from "@/lib/auth";
 import {
   LayoutDashboard, Users, Building2, Inbox, Send, Mail,
-  ClipboardList, KanbanSquare, UserCog, FileText, Search, LogOut, Menu, X, Bell, Sparkles
+  ClipboardList, KanbanSquare, UserCog, FileText, Search, LogOut, Menu, X, Sparkles
 } from "lucide-react";
+import { NotificationBell } from "./NotificationBell";
 
 type NavItem = { to: string; label: string; icon: ReactNode };
 
@@ -134,10 +135,7 @@ export function AppShell({ role, title }: Props) {
             <div className="flex-1">
               <h1 className="font-display text-lg font-semibold">{title ?? ROLE_LABEL[role]}</h1>
             </div>
-            <button className="relative p-2 rounded-md hover:bg-accent" aria-label="Notifications">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-prio-high" />
-            </button>
+            <NotificationBell />
           </div>
         </header>
         <main className="flex-1 px-4 lg:px-8 py-6 lg:py-8">

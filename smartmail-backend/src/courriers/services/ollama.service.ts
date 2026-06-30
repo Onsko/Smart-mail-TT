@@ -81,6 +81,88 @@ export class OllamaService {
     }
   }
 
+  // Reformulate / rephrase text using the LLM. Returns null on failure.
+  async reformuler(text: string): Promise<string | null> {
+    const trimmed = (text || '').trim();
+    if (!trimmed) return null;
+
+    const prompt = [
+      'Tu es un assistant administratif tunisien. Reformule le texte suivant de manière plus professionnelle,',
+      'courtoise et claire, en gardant le même sens. Renvoie UNIQUEMENT le texte reformulé, sans commentaire.',
+      '',
+      'TEXTE :',
+      '"""',
+      trimmed.slice(0, 4000),
+      '"""',
+    ].join('\n');
+
+    return this.generateText(prompt);
+  }
+
+  // Summarize text using the LLM. Returns null on failure.
+  async resumer(text: string): Promise<string | null> {
+    const trimmed = (text || '').trim();
+    if (!trimmed) return null;
+
+    const prompt = [
+      'Tu es un assistant administratif tunisien. Fais un résumé clair et concis (3-5 phrases) du texte suivant.',
+      'Renvoie UNIQUEMENT le résumé, sans commentaire.',
+      '',
+      'TEXTE :',
+      '"""',
+      trimmed.slice(0, 4000),
+      '"""',
+    ].join('\n');
+
+    return this.generateText(prompt);
+  }
+
+  // Generate a draft response for a courrier. Returns null on failure.
+  async genererReponse(objet: string, contenu: string): Promise<string | null> {
+    const prompt = [
+      'Tu es un assistant administratif de Tunisie Telecom. Rédige une réponse professionnelle,',
+      'courtoise et complète au courrier suivant. La réponse doit être en français, formatée avec',
+      'une formule d\'appel, le corps du message et une formule de politesse.',
+      'Renvoie UNIQUEMENT la réponse, sans commentaire.',
+      '',
+      `Objet du courrier : ${objet}`,
+      `Contenu : ${contenu || '(non fourni)'}`,
+    ].join('\n');
+
+    return this.generateText(prompt);
+  }
+
+  private async generateText(prompt: string): Promise<string | null> {
+    try {
+      const res = await this.fetchWithTimeout(
+        `${this.baseUrl}/api/generate`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: this.model,
+            prompt,
+            stream: false,
+            options: { temperature: 0.3 },
+          }),
+        },
+        60000,
+      );
+
+      if (!res.ok) {
+        this.logger.warn(`Ollama a répondu ${res.status}`);
+        return null;
+      }
+
+      const data = (await res.json()) as { response?: string };
+      if (!data.response) return null;
+      return data.response.trim();
+    } catch (err) {
+      this.logger.warn(`Appel Ollama échoué : ${(err as Error).message}`);
+      return null;
+    }
+  }
+
   private buildPrompt(text: string): string {
     return [
       'Tu es un assistant administratif tunisien spécialisé dans le tri du courrier entrant pour un opérateur télécom.',

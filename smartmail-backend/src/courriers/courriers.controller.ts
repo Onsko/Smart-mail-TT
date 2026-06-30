@@ -44,6 +44,12 @@ export class CourriersController {
     return this.courriersService.findAll();
   }
 
+  @Get('suivi/:reference')
+  @Roles(Role.CLIENT, Role.SUPER_ADMIN)
+  async findByReference(@Param('reference') reference: string) {
+    return this.courriersService.findByReference(reference);
+  }
+
   @Get(':id')
   @Roles(Role.BO, Role.SUPER_ADMIN, Role.DIRECTEUR, Role.CHEF, Role.AGENT)
   async findById(@Param('id') id: string) {
@@ -51,7 +57,7 @@ export class CourriersController {
   }
 
   @Post('documents/upload')
-  @Roles(Role.BO, Role.SUPER_ADMIN)
+  @Roles(Role.BO, Role.SUPER_ADMIN, Role.AGENT)
   @UseInterceptors(FileInterceptor('file', new UploadService().getMulterOptions()))
   async uploadDocument(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
@@ -70,9 +76,27 @@ export class CourriersController {
   }
 
   @Get('ollama/status')
-  @Roles(Role.BO, Role.SUPER_ADMIN, Role.DIRECTEUR)
+  @Roles(Role.BO, Role.SUPER_ADMIN, Role.DIRECTEUR, Role.AGENT)
   async ollamaStatus() {
     return this.courriersService.getOllamaStatus();
+  }
+
+  @Post('ia/reformuler')
+  @Roles(Role.AGENT, Role.SUPER_ADMIN)
+  async reformuler(@Body() body: { text: string }) {
+    return this.courriersService.reformulerTexte(body.text);
+  }
+
+  @Post('ia/resumer')
+  @Roles(Role.AGENT, Role.SUPER_ADMIN)
+  async resumer(@Body() body: { text: string }) {
+    return this.courriersService.resumerTexte(body.text);
+  }
+
+  @Post('ia/generer-reponse')
+  @Roles(Role.AGENT, Role.SUPER_ADMIN)
+  async genererReponse(@Body() body: { objet: string; contenu: string }) {
+    return this.courriersService.genererReponseIA(body.objet, body.contenu);
   }
 
   @Post('analyse-ollama')
@@ -93,7 +117,7 @@ export class CourriersController {
   }
 
   @Patch(':id/documents')
-  @Roles(Role.BO, Role.SUPER_ADMIN)
+  @Roles(Role.BO, Role.SUPER_ADMIN, Role.AGENT)
   async attachDocument(@Param('id') id: string, @Body('url') url: string) {
     return this.courriersService.attachDocument(id, url);
   }
@@ -102,6 +126,34 @@ export class CourriersController {
   @Roles(Role.DIRECTEUR, Role.SUPER_ADMIN)
   async findPendingForDirector() {
     return this.courriersService.findPendingForDirector();
+  }
+
+  @Get('chef/mes-courriers')
+  @Roles(Role.CHEF, Role.SUPER_ADMIN)
+  async findForChef(@Req() req: Request) {
+    const user = req.user as { _id: { toString: () => string } };
+    return this.courriersService.findForChef(user._id.toString());
+  }
+
+  @Get('chef/agents-charge')
+  @Roles(Role.CHEF, Role.SUPER_ADMIN)
+  async getAgentsCharge(@Req() req: Request) {
+    const user = req.user as { _id: { toString: () => string } };
+    return this.courriersService.getAgentsCharge(user._id.toString());
+  }
+
+  @Get('agent/mes-courriers')
+  @Roles(Role.AGENT, Role.SUPER_ADMIN)
+  async findForAgent(@Req() req: Request) {
+    const user = req.user as { _id: { toString: () => string } };
+    return this.courriersService.findForAgent(user._id.toString());
+  }
+
+  @Post(':id/assigner-agent')
+  @Roles(Role.CHEF, Role.SUPER_ADMIN)
+  async assignAgent(@Param('id') id: string, @Body() body: { agentId: string }, @Req() req: Request) {
+    const user = req.user as { _id: { toString: () => string } };
+    return this.courriersService.assignAgent(id, body.agentId, user._id.toString());
   }
 
   @Get(':id/recommandations')
@@ -121,6 +173,20 @@ export class CourriersController {
   async assignService(@Param('id') id: string, @Body() dto: AssignCourrierDto, @Req() req: Request) {
     const user = req.user as { _id: { toString: () => string } };
     return this.courriersService.assignService(id, dto, user._id.toString());
+  }
+
+  @Patch(':id/statut')
+  @Roles(Role.AGENT, Role.CHEF, Role.SUPER_ADMIN)
+  async updateStatut(@Param('id') id: string, @Body() body: { statut: string }, @Req() req: Request) {
+    const user = req.user as { _id: { toString: () => string } };
+    return this.courriersService.updateStatut(id, body.statut, user._id.toString());
+  }
+
+  @Patch(':id/reponse')
+  @Roles(Role.AGENT, Role.SUPER_ADMIN)
+  async saveReponse(@Param('id') id: string, @Body() body: { reponse: string; envoyer: boolean }, @Req() req: Request) {
+    const user = req.user as { _id: { toString: () => string } };
+    return this.courriersService.saveReponse(id, body.reponse, body.envoyer, user._id.toString());
   }
 
   @Patch(':id/valider')

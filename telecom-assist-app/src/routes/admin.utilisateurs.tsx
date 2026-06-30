@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { DataTable, type Column } from "@/components/DataTable";
-import { SERVICES } from "@/lib/mockData";
-import { usersApi, type ApiUser, type CreateUserPayload } from "@/lib/api";
+import { usersApi, servicesApi, type ApiUser, type CreateUserPayload, type Service } from "@/lib/api";
 import { Plus, X, MoreHorizontal, UserCheck, UserX, ShieldCheck, Trash2, RefreshCw } from "lucide-react";
 
 export const Route = createFileRoute("/admin/utilisateurs")({
@@ -26,6 +25,7 @@ function UtilisateursPage() {
   const [form, setForm] = useState<CreateUserPayload>({ nom: "", prenom: "", email: "", password: "", role: "BO", service: "" });
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [services, setServices] = useState<Service[]>([]);
 
   function showToast(msg: string) {
     setToast(msg);
@@ -42,6 +42,7 @@ function UtilisateursPage() {
   }
 
   useEffect(() => { loadUsers(); }, []);
+  useEffect(() => { servicesApi.getAll().then(setServices).catch(() => {}); }, []);
 
   // Fermer le menu si clic extérieur
   useEffect(() => {
@@ -127,7 +128,10 @@ function UtilisateursPage() {
         {r.role}
       </span>
     )},
-    { key: "service", header: "Service", render: r => <span className="text-sm">{r.service ? "Affecté" : "—"}</span> },
+    { key: "service", header: "Service", render: r => {
+      const svc = typeof r.service === 'object' && r.service ? r.service : null;
+      return <span className="text-sm">{svc ? `${svc.name} (${svc.code})` : "—"}</span>;
+    } },
     { key: "actif", header: "Statut", render: r => (
       <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs ring-1 ring-inset
         ${r.actif ? "bg-success/15 text-teal-700 ring-success/40" : "bg-muted text-muted-foreground ring-border"}`}>
@@ -253,10 +257,10 @@ function UtilisateursPage() {
                 </select>
               </div>
               <div>
-                <label className="text-sm font-medium block mb-1.5">Service</label>
+                <label className="text-sm font-medium block mb-1.5">Service {(form.role === "CHEF" || form.role === "AGENT") && <span className="text-destructive">*</span>}</label>
                 <select value={form.service} onChange={e => setForm(f => ({ ...f, service: e.target.value }))} className="w-full rounded-md border bg-card px-3 py-2 text-sm">
                   <option value="">—</option>
-                  {SERVICES.map(s => <option key={s} value={s}>{s}</option>)}
+                  {services.map(s => <option key={s._id} value={s._id}>{s.name} ({s.code})</option>)}
                 </select>
               </div>
               {formError && (

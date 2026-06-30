@@ -23,6 +23,7 @@ export interface SessionUser {
   email: string;
   role: Role;
   service?: string;
+  serviceId?: string;
 }
 
 const KEY = "smartmail.session";

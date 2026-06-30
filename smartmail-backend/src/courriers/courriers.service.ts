@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Courrier, CourrierDocument, CourrierStatut, CourrierType } from './schemas/courrier.schema';
@@ -6,10 +6,13 @@ import { CreateCourrierDto } from './dto/create-courrier.dto';
 import { AssignCourrierDto } from './dto/assign-courrier.dto';
 import { ValidateCourrierDto } from './dto/validate-courrier.dto';
 import { Service, ServiceDocument } from '../services/schemas/service.schema';
+import { User, UserDocument } from '../users/schemas/user.schema';
 import { ReferenceService } from './services/reference.service';
 import { OcrService, ExtractionResult } from './services/ocr.service';
 import { RecommendationService, RecommendationResult } from './services/recommendation.service';
 import { OllamaService } from './services/ollama.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { Role } from '../users/schemas/user.schema';
 
 export interface OllamaExtractionResult extends ExtractionResult {
   resume: string;
@@ -24,10 +27,12 @@ export class CourriersService {
   constructor(
     @InjectModel(Courrier.name) private courrierModel: Model<CourrierDocument>,
     @InjectModel(Service.name) private serviceModel: Model<ServiceDocument>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
     private referenceService: ReferenceService,
     private ocrService: OcrService,
     private recommendationService: RecommendationService,
     private ollamaService: OllamaService,
+    private notificationsService: NotificationsService,
   ) {}
 
   async create(dto: CreateCourrierDto, createdBy: string): Promise<CourrierDocument> {
@@ -80,6 +85,24 @@ export class CourriersService {
       available: await this.ollamaService.isAvailable(),
       model: this.ollamaService.getModelName(),
     };
+  }
+
+  async reformulerTexte(text: string): Promise<{ result: string | null }> {
+    const result = await this.ollamaService.reformuler(text);
+    if (!result) throw new BadRequestException('Ollama indisponible ou erreur lors de la reformulation');
+    return { result };
+  }
+
+  async resumerTexte(text: string): Promise<{ result: string | null }> {
+    const result = await this.ollamaService.resumer(text);
+    if (!result) throw new BadRequestException('Ollama indisponible ou erreur lors du résumé');
+    return { result };
+  }
+
+  async genererReponseIA(objet: string, contenu: string): Promise<{ result: string | null }> {
+    const result = await this.ollamaService.genererReponse(objet, contenu);
+    if (!result) throw new BadRequestException('Ollama indisponible ou erreur lors de la génération');
+    return { result };
   }
 
   // Hybrid analysis: always compute the reliable heuristic baseline, then enrich
@@ -188,8 +211,173 @@ export class CourriersService {
       .exec();
   }
 
+  // Suivi public par référence (pour les clients)
+  async findByReference(reference: string): Promise<any> {
+    const courrier = await this.courrierModel
+      .findOne({ reference: reference.toUpperCase() })
+      .populate('service', 'code name')
+      .populate('agentAssigne', 'nom prenom')
+      .lean()
+      .exec();
+    if (!courrier) {
+      throw new NotFoundException('Courrier introuvable avec cette référence');
+    }
+    return {
+      _id: courrier._id.toString(),
+      reference: courrier.reference,
+      objet: courrier.objet,
+      statut: courrier.statut,
+      priorite: courrier.priorite,
+      correspondant: courrier.correspondant,
+      createdAt: (courrier as any).createdAt,
+      reponse: (courrier as any).reponse || '',
+      reponseEnvoyee: (courrier as any).reponseEnvoyee || false,
+      service: courrier.service ? {
+        _id: (courrier.service as any)._id?.toString(),
+        name: (courrier.service as any).name,
+        code: (courrier.service as any).code,
+      } : null,
+      agentAssigne: courrier.agentAssigne ? {
+        _id: (courrier.agentAssigne as any)._id?.toString(),
+        nom: (courrier.agentAssigne as any).nom,
+        prenom: (courrier.agentAssigne as any).prenom,
+      } : null,
+      historique: (courrier.historique || []).map((h: any) => ({
+        action: h.action,
+        date: h.date,
+      })),
+    };
+  }
+
   async getRecommendations(courrierId: string): Promise<RecommendationResult> {
     return this.recommendationService.recommend(courrierId);
+  }
+
+  // --- Chef de service ---
+
+  // Récupère les courriers affectés au service du chef connecté.
+  async findForChef(userId: string): Promise<CourrierDocument[]> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user || !user.service) {
+      throw new NotFoundException('Aucun service associé à cet utilisateur');
+    }
+    return this.courrierModel
+      .find({ service: user.service })
+      .populate('service', 'code name')
+      .populate('agentAssigne', 'nom prenom email')
+      .populate('createdBy', 'nom prenom')
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
+  // Récupère les courriers assignés à l'agent connecté.
+  async findForAgent(userId: string): Promise<CourrierDocument[]> {
+    return this.courrierModel
+      .find({ agentAssigne: new Types.ObjectId(userId) })
+      .populate('service', 'code name')
+      .populate('agentAssigne', 'nom prenom email')
+      .populate('createdBy', 'nom prenom')
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
+  // Récupère les agents du service du chef + leur charge (nombre de courriers actifs).
+  async getAgentsCharge(userId: string): Promise<{
+    serviceId: string;
+    serviceName: string;
+    agents: {
+      _id: string;
+      nom: string;
+      prenom: string;
+      email: string;
+      charge: number;
+      recommended: boolean;
+    }[];
+  }> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user || !user.service) {
+      throw new NotFoundException('Aucun service associé à cet utilisateur');
+    }
+    const service = await this.serviceModel.findById(user.service).exec();
+    if (!service) {
+      throw new NotFoundException('Service introuvable');
+    }
+
+    // Cherche directement les utilisateurs AGENT liés à ce service
+    const agents = await this.userModel
+      .find({ service: user.service, role: Role.AGENT, actif: true })
+      .select('nom prenom email')
+      .exec();
+
+    // Compte les courriers actifs (A_TRAITER, EN_COURS) par agent.
+    const charges = await Promise.all(
+      agents.map(async (agent) => {
+        const count = await this.courrierModel.countDocuments({
+          agentAssigne: agent._id,
+          statut: { $in: [CourrierStatut.A_TRAITER, CourrierStatut.EN_COURS] },
+        }).exec();
+        return {
+          _id: agent._id.toString(),
+          nom: agent.nom,
+          prenom: agent.prenom,
+          email: agent.email,
+          charge: count,
+        };
+      }),
+    );
+
+    // L'agent avec le moins de courriers est recommandé.
+    const minCharge = charges.length > 0 ? Math.min(...charges.map((a) => a.charge)) : 0;
+    const result = charges.map((a) => ({
+      _id: a._id.toString(),
+      nom: a.nom,
+      prenom: a.prenom,
+      email: a.email,
+      charge: a.charge,
+      recommended: a.charge === minCharge,
+    }));
+
+    return {
+      serviceId: service._id.toString(),
+      serviceName: service.name,
+      agents: result,
+    };
+  }
+
+  // Assigne un courrier à un agent spécifique (par le chef de service).
+  async assignAgent(courrierId: string, agentId: string, userId: string): Promise<CourrierDocument> {
+    const courrier = await this.courrierModel
+      .findByIdAndUpdate(
+        courrierId,
+        {
+          agentAssigne: new Types.ObjectId(agentId),
+          statut: CourrierStatut.EN_COURS,
+          $push: {
+            historique: {
+              action: `Affectation à l'agent ${agentId}`,
+              date: new Date(),
+              user: new Types.ObjectId(userId),
+            },
+          },
+        },
+        { new: true },
+      )
+      .populate('service', 'code name')
+      .populate('agentAssigne', 'nom prenom email')
+      .exec();
+    if (!courrier) {
+      throw new NotFoundException('Courrier introuvable');
+    }
+
+    // Notifier l'agent assigné
+    await this.notificationsService.createForUser(
+      agentId,
+      `Courrier ${courrier.reference} vous a été assigné : ${courrier.objet}`,
+      'COURRIER_AGENT',
+      courrierId,
+    );
+
+    return courrier;
   }
 
   async assignService(courrierId: string, dto: AssignCourrierDto, userId: string): Promise<CourrierDocument> {
@@ -221,6 +409,22 @@ export class CourriersService {
     if (!courrier) {
       throw new NotFoundException('Courrier introuvable');
     }
+
+    // Notify all CHEF users of the assigned service.
+    const chefs = await this.userModel
+      .find({ service: new Types.ObjectId(dto.service), role: Role.CHEF, actif: true })
+      .select('_id')
+      .exec();
+    if (chefs.length > 0) {
+      const serviceName = (courrier.service as any)?.name || dto.service;
+      await this.notificationsService.createForUsers(
+        chefs.map((c) => c._id.toString()),
+        `Nouveau courrier affecté au service ${serviceName} : ${courrier.objet}`,
+        'COURRIER_AFFECTE',
+        courrierId,
+      );
+    }
+
     return courrier;
   }
 
@@ -237,6 +441,67 @@ export class CourriersService {
           $push: {
             historique: {
               action: 'Validation par le directeur',
+              date: new Date(),
+              user: new Types.ObjectId(userId),
+            },
+          },
+        },
+        { new: true },
+      )
+      .populate('service', 'code name')
+      .populate('agentAssigne', 'nom prenom email')
+      .exec();
+    if (!courrier) {
+      throw new NotFoundException('Courrier introuvable');
+    }
+    return courrier;
+  }
+
+  async updateStatut(courrierId: string, statut: string, userId: string): Promise<CourrierDocument> {
+    const validStatuts = ['NOUVEAU', 'A_AFFECTER', 'A_TRAITER', 'EN_COURS', 'TRAITE', 'CLOTURE'];
+    if (!validStatuts.includes(statut)) {
+      throw new BadRequestException(`Statut invalide: ${statut}`);
+    }
+    const courrier = await this.courrierModel
+      .findByIdAndUpdate(
+        courrierId,
+        {
+          statut,
+          $push: {
+            historique: {
+              action: `Statut changé à ${statut}`,
+              date: new Date(),
+              user: new Types.ObjectId(userId),
+            },
+          },
+        },
+        { new: true },
+      )
+      .populate('service', 'code name')
+      .populate('agentAssigne', 'nom prenom email')
+      .exec();
+    if (!courrier) {
+      throw new NotFoundException('Courrier introuvable');
+    }
+    return courrier;
+  }
+
+  async saveReponse(courrierId: string, reponse: string, envoyer: boolean, userId: string): Promise<CourrierDocument> {
+    const update: any = {
+      reponse,
+      reponseEnvoyee: envoyer,
+    };
+    if (envoyer) {
+      update.statut = 'TRAITE';
+    }
+    const courrier = await this.courrierModel
+      .findByIdAndUpdate(
+        courrierId,
+        {
+          ...update,
+          $push: {
+            historique: {
+              action: envoyer ? 'Réponse envoyée par l\'agent' : 'Brouillon enregistré par l\'agent',
               date: new Date(),
               user: new Types.ObjectId(userId),
             },
