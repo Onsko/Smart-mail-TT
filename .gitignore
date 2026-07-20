@@ -48,3 +48,8 @@ coverage/
 # Temporary files
 *.tmp
 *.temp
+.kiro/specs/amelioration-generation-reponses-ia/tasks.md
+.kiro/specs/amelioration-generation-reponses-ia/design.md
+.kiro/specs/amelioration-generation-reponses-ia/bugfix.md
+Rapport_Stage_SmartMail_Complet.md
+Rapport_Stage_SmartMail.md

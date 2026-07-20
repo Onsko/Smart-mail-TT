@@ -12,6 +12,20 @@ const map: Record<Status, { label: string; cls: string }> = {
 
 export function StatusBadge({ status, className }: { status: Status; className?: string }) {
   const s = map[status];
+  
+  // Handle case where status is not in the map
+  if (!s) {
+    return (
+      <span className={cn(
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset",
+        "bg-muted text-muted-foreground ring-border", className
+      )}>
+        <span className="h-1.5 w-1.5 rounded-full bg-current opacity-80" />
+        {status}
+      </span>
+    );
+  }
+  
   return (
     <span className={cn(
       "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset",

@@ -125,33 +125,159 @@ function SuiviPage() {
                 </div>
               )}
               <button
-                onClick={() => {
-                  const win = window.open("", "_blank");
-                  if (!win) return;
-                  win.document.write(`
-                    <html><head><title>Réponse - ${result.reference}</title>
-                    <style>
-                      body { font-family: 'Segoe UI', Arial, sans-serif; max-width: 700px; margin: 40px auto; padding: 20px; color: #1a1a1a; }
-                      h1 { font-size: 18px; color: #1e40af; }
-                      .ref { font-size: 12px; color: #666; font-family: monospace; }
-                      .meta { font-size: 13px; color: #555; margin: 10px 0; }
-                      .reponse { white-space: pre-wrap; font-size: 14px; line-height: 1.6; margin-top: 20px; }
-                      .footer { margin-top: 40px; font-size: 11px; color: #999; border-top: 1px solid #eee; padding-top: 10px; }
-                    </style></head><body>
-                      <div class="ref">${result.reference}</div>
-                      <h1>${result.objet}</h1>
-                      <div class="meta">
-                        Expéditeur : ${result.correspondant || "—"}<br/>
-                        Service : ${result.service?.name || "—"}<br/>
-                        Date : ${new Date(result.createdAt).toLocaleDateString("fr-FR")}
-                      </div>
-                      <div class="reponse">${(result.reponse || "Aucune réponse disponible.").replace(/</g, "&lt;")}</div>
-                      <div class="footer">Tunisie Telecom — Document généré le ${new Date().toLocaleString("fr-FR")}</div>
-                    </body></html>
-                  `);
-                  win.document.close();
-                  win.focus();
-                  setTimeout(() => win.print(), 500);
+                onClick={async () => {
+                  try {
+                    // Simple approach: Use jsPDF directly without html2canvas
+                    const { jsPDF } = await import('jspdf');
+                    const doc = new jsPDF();
+                    
+                    // Set up the document
+                    const margin = 20;
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    const maxWidth = pageWidth - (2 * margin);
+                    let y = margin;
+                    
+                    // Helper function to add text with line breaks
+                    const addText = (text: string, fontSize: number = 12, isBold: boolean = false, color: string = '#000000') => {
+                      doc.setFontSize(fontSize);
+                      doc.setFont('helvetica', isBold ? 'bold' : 'normal');
+                      doc.setTextColor(color);
+                      
+                      const lines = doc.splitTextToSize(text, maxWidth);
+                      doc.text(lines, margin, y);
+                      y += (lines.length * fontSize * 0.35) + 5;
+                    };
+                    
+                    // Add content
+                    addText(result.reference, 10, false, '#666666');
+                    y += 5;
+                    
+                    addText(result.objet, 16, true, '#1e40af');
+                    y += 10;
+                    
+                    addText(`Expéditeur : ${result.correspondant || "—"}`, 11);
+                    addText(`Service : ${result.service?.name || "—"}`, 11);
+                    addText(`Date : ${new Date(result.createdAt).toLocaleDateString("fr-FR")}`, 11);
+                    y += 10;
+                    
+                    // Add response content
+                    const reponseText = result.reponse || "Aucune réponse disponible.";
+                    addText(reponseText, 12);
+                    
+                    // Add footer
+                    y += 20;
+                    doc.setDrawColor('#cccccc');
+                    doc.line(margin, y, pageWidth - margin, y);
+                    y += 10;
+                    
+                    addText(`Tunisie Telecom — Document généré le ${new Date().toLocaleString("fr-FR")}`, 9, false, '#999999');
+                    
+                    // Save the PDF
+                    doc.save(`reponse-${result.reference}.pdf`);
+                    
+                  } catch (error) {
+                    console.error('Erreur lors de la génération du PDF:', error);
+                    
+                    // Fallback: Try the iframe approach
+                    try {
+                      const html2pdf = (await import('html2pdf.js')).default;
+                      
+                      // Create a completely isolated iframe for PDF generation
+                      const iframe = document.createElement('iframe');
+                      iframe.style.position = 'absolute';
+                      iframe.style.left = '-9999px';
+                      iframe.style.top = '0';
+                      iframe.style.width = '800px';
+                      iframe.style.height = '600px';
+                      iframe.style.border = 'none';
+                      
+                      document.body.appendChild(iframe);
+                      
+                      // Write clean HTML to iframe
+                      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+                      if (!iframeDoc) throw new Error('Cannot access iframe document');
+                      
+                      iframeDoc.open();
+                      iframeDoc.write(`
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                          <meta charset="utf-8">
+                          <style>
+                            * { margin: 0; padding: 0; box-sizing: border-box; }
+                            body { font-family: Arial, sans-serif; background: #ffffff; color: #333; }
+                            .container { max-width: 700px; margin: 0; padding: 20px; }
+                            .reference { font-size: 12px; color: #666; font-family: monospace; margin-bottom: 15px; }
+                            .title { font-size: 18px; color: #1e40af; margin-bottom: 15px; font-weight: bold; }
+                            .meta { font-size: 13px; color: #555; margin-bottom: 20px; line-height: 1.4; }
+                            .content { font-size: 14px; line-height: 1.6; margin: 20px 0; white-space: pre-wrap; }
+                            .footer { margin-top: 40px; font-size: 11px; color: #999; border-top: 1px solid #ccc; padding-top: 10px; }
+                            strong { font-weight: bold; }
+                          </style>
+                        </head>
+                        <body>
+                          <div class="container">
+                            <div class="reference">${result.reference}</div>
+                            <h1 class="title">${result.objet}</h1>
+                            <div class="meta">
+                              <strong>Expéditeur :</strong> ${result.correspondant || "—"}<br/>
+                              <strong>Service :</strong> ${result.service?.name || "—"}<br/>
+                              <strong>Date :</strong> ${new Date(result.createdAt).toLocaleDateString("fr-FR")}
+                            </div>
+                            <div class="content">${(result.reponse || "Aucune réponse disponible.").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+                            <div class="footer">
+                              <strong>Tunisie Telecom</strong> — Document généré le ${new Date().toLocaleString("fr-FR")}
+                            </div>
+                          </div>
+                        </body>
+                        </html>
+                      `);
+                      iframeDoc.close();
+                      
+                      // Wait for iframe to load
+                      await new Promise((resolve) => {
+                        iframe.onload = resolve;
+                        setTimeout(resolve, 100); // Fallback
+                      });
+                      
+                      // Configure html2pdf with iframe-specific settings
+                      const options = {
+                        margin: [15, 15, 15, 15],
+                        filename: `reponse-${result.reference}.pdf`,
+                        image: { 
+                          type: 'jpeg', 
+                          quality: 0.95 
+                        },
+                        html2canvas: { 
+                          scale: 2,
+                          useCORS: false,
+                          allowTaint: true,
+                          backgroundColor: '#ffffff',
+                          ignoreElements: (element: any) => {
+                            // Ignore any elements that might cause issues
+                            return element.tagName === 'SCRIPT' || element.tagName === 'LINK';
+                          }
+                        },
+                        jsPDF: { 
+                          unit: 'mm', 
+                          format: 'a4', 
+                          orientation: 'portrait' 
+                        }
+                      };
+                      
+                      // Generate PDF from iframe content
+                      await html2pdf().set(options).from(iframeDoc.body).save();
+                      
+                      // Clean up iframe
+                      if (iframe.parentNode === document.body) {
+                        document.body.removeChild(iframe);
+                      }
+                      
+                    } catch (fallbackError) {
+                      console.error('Erreur avec la méthode de secours:', fallbackError);
+                      alert('Erreur lors de la génération du PDF. Fonctionnalité temporairement indisponible.');
+                    }
+                  }
                 }}
                 className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2.5 text-sm font-medium hover:opacity-90"
               >

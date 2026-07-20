@@ -17,5 +17,17 @@ export default defineConfig({
       port: 5173,
       strictPort: false,
     },
+    optimizeDeps: {
+      include: ['html2pdf.js', 'html2canvas', 'jspdf'],
+    },
+    build: {
+      commonjsOptions: {
+        include: [/html2pdf\.js/, /html2canvas/, /jspdf/, /node_modules/],
+      },
+    },
+    define: {
+      // Help with html2canvas modern CSS support
+      global: 'globalThis',
+    },
   },
 });

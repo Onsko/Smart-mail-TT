@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Courrier, CourrierDocument, CourrierStatut, CourrierType } from './schemas/courrier.schema';
@@ -24,6 +24,8 @@ export interface OllamaExtractionResult extends ExtractionResult {
 
 @Injectable()
 export class CourriersService {
+  private readonly logger = new Logger(CourriersService.name);
+
   constructor(
     @InjectModel(Courrier.name) private courrierModel: Model<CourrierDocument>,
     @InjectModel(Service.name) private serviceModel: Model<ServiceDocument>,
@@ -99,10 +101,33 @@ export class CourriersService {
     return { result };
   }
 
-  async genererReponseIA(objet: string, contenu: string): Promise<{ result: string | null }> {
-    const result = await this.ollamaService.genererReponse(objet, contenu);
-    if (!result) throw new BadRequestException('Ollama indisponible ou erreur lors de la génération');
-    return { result };
+  async genererReponseIA(objet: string, contenu: string): Promise<{ result: string | null; error?: string }> {
+    try {
+      // Vérifier d'abord si Ollama est disponible
+      const isAvailable = await this.ollamaService.isAvailable();
+      if (!isAvailable) {
+        return { 
+          result: null, 
+          error: 'Service IA temporairement indisponible. Veuillez réessayer plus tard.' 
+        };
+      }
+
+      const result = await this.ollamaService.genererReponse(objet, contenu);
+      if (!result) {
+        return { 
+          result: null, 
+          error: 'Impossible de générer une réponse. Veuillez vérifier votre saisie.' 
+        };
+      }
+      
+      return { result };
+    } catch (error) {
+      this.logger.warn(`Erreur génération réponse IA: ${error.message}`);
+      return { 
+        result: null, 
+        error: 'Service IA temporairement indisponible. Veuillez réessayer plus tard.' 
+      };
+    }
   }
 
   // Hybrid analysis: always compute the reliable heuristic baseline, then enrich
