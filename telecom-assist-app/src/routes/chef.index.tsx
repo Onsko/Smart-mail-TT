@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { courriersApi, type Courrier } from "@/lib/api";
 import { PriorityBadge } from "@/components/StatusBadge";
 
@@ -7,14 +8,14 @@ export const Route = createFileRoute("/chef/")({
   component: KanbanPage,
 });
 
-const COLUMNS = [
-  { key: "A_TRAITER", title: "À traiter", color: "bg-primary-bright" },
-  { key: "EN_COURS",  title: "En cours",  color: "bg-ai" },
-  { key: "TRAITE",    title: "Traités",   color: "bg-success" },
-] as const;
-
 function KanbanPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+  const COLUMNS = [
+    { key: "A_TRAITER", title: t("chef.aTraiter"), color: "bg-primary-bright" },
+    { key: "EN_COURS",  title: t("chef.enCours"),  color: "bg-ai" },
+    { key: "TRAITE",    title: t("chef.traites"),   color: "bg-success" },
+  ] as const;
   const [courriers, setCourriers] = useState<Courrier[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -25,13 +26,13 @@ function KanbanPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="p-6 text-sm text-muted-foreground">Chargement…</div>;
+  if (loading) return <div className="p-6 text-sm text-muted-foreground">{t("chef.loading")}</div>;
 
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="font-display text-xl font-semibold">Kanban — Mon service</h2>
-        <p className="text-sm text-muted-foreground">Vue d'ensemble des courriers affectés à votre service.</p>
+        <h2 className="font-display text-xl font-semibold">{t("chef.title")}</h2>
+        <p className="text-sm text-muted-foreground">{t("chef.desc")}</p>
       </div>
       <div className="grid lg:grid-cols-3 gap-4">
         {COLUMNS.map(col => {
@@ -60,7 +61,7 @@ function KanbanPage() {
                     <div className="mt-1 text-xs text-muted-foreground">{c.correspondant}</div>
                   </button>
                 ))}
-                {items.length === 0 && <div className="text-center text-xs text-muted-foreground py-8">Aucun courrier</div>}
+                {items.length === 0 && <div className="text-center text-xs text-muted-foreground py-8">{t("chef.empty")}</div>}
               </div>
             </div>
           );

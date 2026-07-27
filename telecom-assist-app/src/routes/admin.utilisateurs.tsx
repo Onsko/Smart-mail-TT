@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { DataTable, type Column } from "@/components/DataTable";
 import { usersApi, servicesApi, type ApiUser, type CreateUserPayload, type Service } from "@/lib/api";
 import { Plus, X, MoreHorizontal, UserCheck, UserX, ShieldCheck, Trash2, RefreshCw } from "lucide-react";
@@ -13,6 +14,7 @@ const ASSIGNABLE_ROLES = ["BO", "DIRECTEUR", "CHEF", "AGENT", "SUPER_ADMIN"] as 
 const ALL_ROLES = ["BO", "DIRECTEUR", "CHEF", "AGENT", "CLIENT", "SUPER_ADMIN"] as const;
 
 function UtilisateursPage() {
+  const { t } = useTranslation();
   const [openCreate, setOpenCreate] = useState(false);
   const [roleFilter, setRoleFilter] = useState<string>("");
   const [users, setUsers] = useState<ApiUser[]>([]);
@@ -37,7 +39,7 @@ function UtilisateursPage() {
     setListError("");
     usersApi.getAll()
       .then(data => setUsers(data))
-      .catch(() => setListError("Impossible de charger les utilisateurs. Vérifiez votre connexion."))
+      .catch(() =>     setListError(t("admin.loadError")))
       .finally(() => setLoadingList(false));
   }
 
@@ -66,11 +68,11 @@ function UtilisateursPage() {
       if (!payload.service) delete payload.service;
       const created = await usersApi.create(payload);
       setUsers(prev => [...prev, created]);
-      showToast(`✓ ${created.prenom} ${created.nom} créé avec succès`);
+      showToast(`✓ ${created.prenom} ${created.nom} ${t("admin.createSuccess")}`);
       setForm({ nom: "", prenom: "", email: "", password: "", role: "BO", service: "" });
       setOpenCreate(false);
     } catch (err: unknown) {
-      setFormError(err instanceof Error ? err.message : "Erreur lors de la création");
+      setFormError(err instanceof Error ? err.message : t("admin.createError"));
     } finally {
       setSubmitting(false);
     }
@@ -81,8 +83,8 @@ function UtilisateursPage() {
     try {
       const updated = await usersApi.updateStatus(user._id, !user.actif);
       setUsers(prev => prev.map(u => u._id === user._id ? updated : u));
-      showToast(`✓ ${user.prenom} ${user.nom} ${updated.actif ? "activé" : "désactivé"}`);
-    } catch { showToast("Erreur lors de la mise à jour du statut"); }
+      showToast(`✓ ${user.prenom} ${user.nom} ${updated.actif ? t("admin.activate") : t("admin.deactivate")}`);
+    } catch { showToast(t("admin.statusError")); }
   }
 
   async function handleChangeRole(user: ApiUser, role: string) {
@@ -90,22 +92,22 @@ function UtilisateursPage() {
     try {
       const updated = await usersApi.updateRole(user._id, role);
       setUsers(prev => prev.map(u => u._id === user._id ? updated : u));
-      showToast(`✓ Rôle de ${user.prenom} ${user.nom} changé en ${role}`);
-    } catch { showToast("Erreur lors du changement de rôle"); }
+      showToast(`✓ ${t("admin.role")} ${user.prenom} ${user.nom} changé en ${role}`);
+    } catch { showToast(t("admin.roleError")); }
   }
 
   async function handleDelete(user: ApiUser) {
     setActionMenu(null);
-    if (!confirm(`Supprimer définitivement ${user.prenom} ${user.nom} ?`)) return;
+    if (!confirm(`${t("admin.deleteConfirm")} ${user.prenom} ${user.nom} ?`)) return;
     try {
       await usersApi.delete(user._id);
       setUsers(prev => prev.filter(u => u._id !== user._id));
-      showToast(`✓ ${user.prenom} ${user.nom} supprimé`);
-    } catch { showToast("Erreur lors de la suppression"); }
+      showToast(`✓ ${user.prenom} ${user.nom} ${t("admin.deleteSuccess")}`);
+    } catch { showToast(t("admin.deleteError")); }
   }
 
   const cols: Column<ApiUser>[] = [
-    { key: "nom", header: "Nom", render: r => (
+    { key: "nom", header: t("admin.name"), render: r => (
       <div className="flex items-center gap-3">
         <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold
           ${r.actif ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
@@ -117,7 +119,7 @@ function UtilisateursPage() {
         </div>
       </div>
     )},
-    { key: "role", header: "Rôle", render: r => (
+    { key: "role", header: t("admin.role"), render: r => (
       <span className={`inline-flex rounded-md px-2 py-0.5 text-xs font-medium
         ${r.role === "SUPER_ADMIN" ? "bg-purple-100 text-purple-700" :
           r.role === "DIRECTEUR" ? "bg-blue-100 text-blue-700" :
@@ -128,15 +130,15 @@ function UtilisateursPage() {
         {r.role}
       </span>
     )},
-    { key: "service", header: "Service", render: r => {
+    { key: "service", header: t("admin.service"), render: r => {
       const svc = typeof r.service === 'object' && r.service ? r.service : null;
       return <span className="text-sm">{svc ? `${svc.name} (${svc.code})` : "—"}</span>;
     } },
-    { key: "actif", header: "Statut", render: r => (
+    { key: "actif", header: t("admin.status"), render: r => (
       <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs ring-1 ring-inset
         ${r.actif ? "bg-success/15 text-teal-700 ring-success/40" : "bg-muted text-muted-foreground ring-border"}`}>
         <span className="h-1.5 w-1.5 rounded-full bg-current" />
-        {r.actif ? "Actif" : "Inactif"}
+        {r.actif ? t("admin.actif") : t("admin.inactif")}
       </span>
     )},
     { key: "actions", header: "", render: r => (
@@ -156,10 +158,10 @@ function UtilisateursPage() {
                   className="w-full flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent"
                 >
                   {r.actif ? <UserX className="h-4 w-4 text-orange-500" /> : <UserCheck className="h-4 w-4 text-teal-600" />}
-                  {r.actif ? "Désactiver le compte" : "Activer le compte"}
+                  {r.actif ? t("admin.deactivate") : t("admin.activate")}
                 </button>
                 <div className="px-3 py-1.5">
-                  <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5" /> Changer le rôle</p>
+                  <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5" /> {t("admin.changeRole")}</p>
                   <select
                     defaultValue={r.role}
                     onChange={e => handleChangeRole(r, e.target.value)}
@@ -179,7 +181,7 @@ function UtilisateursPage() {
                     onClick={() => handleDelete(r)}
                     className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-destructive hover:bg-destructive/10"
                   >
-                    <Trash2 className="h-4 w-4" /> Supprimer le compte
+                    <Trash2 className="h-4 w-4" /> {t("admin.deleteAccount")}
                   </button>
                 </div>
               </div>
@@ -201,15 +203,15 @@ function UtilisateursPage() {
 
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-display text-xl font-semibold">Utilisateurs</h2>
-          <p className="text-sm text-muted-foreground">{users.length} compte(s) enregistré(s)</p>
+          <h2 className="font-display text-xl font-semibold">{t("admin.usersTitle")}</h2>
+          <p className="text-sm text-muted-foreground">{users.length} {t("admin.usersCount")}</p>
         </div>
         <div className="flex gap-2">
           <button onClick={loadUsers} className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-accent">
             <RefreshCw className="h-4 w-4" />
           </button>
           <button onClick={() => setOpenCreate(true)} className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-95">
-            <Plus className="h-4 w-4" /> Nouvel utilisateur
+            <Plus className="h-4 w-4" /> {t("admin.newUser")}
           </button>
         </div>
       </div>
@@ -219,7 +221,7 @@ function UtilisateursPage() {
       )}
 
       {loadingList ? (
-        <div className="text-sm text-muted-foreground py-10 text-center">Chargement…</div>
+        <div className="text-sm text-muted-foreground py-10 text-center">{t("admin.loading")}</div>
       ) : (
         <DataTable
           data={filtered}
@@ -228,7 +230,7 @@ function UtilisateursPage() {
           searchKeys={["nom", "email", "prenom"]}
           filters={
             <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} className="rounded-md border bg-background px-3 py-2 text-sm">
-              <option value="">Tous les rôles</option>
+              <option value="">{t("admin.allRoles")}</option>
               {ALL_ROLES.map(r => <option key={r}>{r}</option>)}
             </select>
           }
@@ -240,24 +242,24 @@ function UtilisateursPage() {
           <div className="absolute inset-0 bg-black/40" onClick={() => setOpenCreate(false)} />
           <div className="relative ml-auto h-full w-full max-w-md bg-card shadow-2xl flex flex-col">
             <div className="p-5 border-b flex items-center justify-between">
-              <h3 className="font-display text-lg font-semibold">Nouvel utilisateur</h3>
+              <h3 className="font-display text-lg font-semibold">{t("admin.createTitle")}</h3>
               <button onClick={() => setOpenCreate(false)} className="p-1.5 rounded-md hover:bg-accent"><X className="h-4 w-4" /></button>
             </div>
             <form className="p-5 space-y-4 overflow-y-auto flex-1" onSubmit={handleCreate}>
               <div className="grid grid-cols-2 gap-3">
-                <Input label="Prénom" placeholder="Prénom" value={form.prenom} onChange={e => setForm(f => ({ ...f, prenom: e.target.value }))} required />
-                <Input label="Nom" placeholder="Nom" value={form.nom} onChange={e => setForm(f => ({ ...f, nom: e.target.value }))} required />
+                <Input label={t("admin.firstName")} placeholder={t("admin.firstName")} value={form.prenom} onChange={e => setForm(f => ({ ...f, prenom: e.target.value }))} required />
+                <Input label={t("admin.lastName")} placeholder={t("admin.lastName")} value={form.nom} onChange={e => setForm(f => ({ ...f, nom: e.target.value }))} required />
               </div>
-              <Input label="Email" type="email" placeholder="prenom.nom@tunisietelecom.tn" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required />
-              <Input label="Mot de passe" type="password" placeholder="Minimum 6 caractères" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} required />
+              <Input label={t("admin.email")} type="email" placeholder={t("admin.emailPlaceholder")} value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required />
+              <Input label={t("admin.password")} type="password" placeholder={t("admin.passwordMin")} value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} required />
               <div>
-                <label className="text-sm font-medium block mb-1.5">Rôle</label>
+                <label className="text-sm font-medium block mb-1.5">{t("admin.roleLabel")}</label>
                 <select value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} className="w-full rounded-md border bg-card px-3 py-2 text-sm">
                   {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
               </div>
               <div>
-                <label className="text-sm font-medium block mb-1.5">Service {(form.role === "CHEF" || form.role === "AGENT") && <span className="text-destructive">*</span>}</label>
+                <label className="text-sm font-medium block mb-1.5">{t("admin.serviceLabel")} {(form.role === "CHEF" || form.role === "AGENT") && <span className="text-destructive">*</span>}</label>
                 <select value={form.service} onChange={e => setForm(f => ({ ...f, service: e.target.value }))} className="w-full rounded-md border bg-card px-3 py-2 text-sm">
                   <option value="">—</option>
                   {services.map(s => <option key={s._id} value={s._id}>{s.name} ({s.code})</option>)}
@@ -267,9 +269,9 @@ function UtilisateursPage() {
                 <div className="rounded-md bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">{formError}</div>
               )}
               <div className="pt-2 flex justify-end gap-2">
-                <button type="button" onClick={() => setOpenCreate(false)} className="rounded-md border px-4 py-2 text-sm">Annuler</button>
+                <button type="button" onClick={() => setOpenCreate(false)} className="rounded-md border px-4 py-2 text-sm">{t("common.cancel")}</button>
                 <button type="submit" disabled={submitting} className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium disabled:opacity-60">
-                  {submitting ? "Création…" : "Créer le compte"}
+                  {submitting ? t("admin.saving") : t("admin.save")}
                 </button>
               </div>
             </form>

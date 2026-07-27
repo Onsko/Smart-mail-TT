@@ -1,5 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import i18n from "@/lib/i18n/config";
 import { Logo } from "@/components/Logo";
 import { setSession, ROLE_HOME, type Role } from "@/lib/auth";
 import { authApi, saveToken } from "@/lib/api";
@@ -8,14 +10,15 @@ import { Mail, Lock, User, ArrowRight, KeyRound } from "lucide-react";
 export const Route = createFileRoute("/client/login")({
   head: () => ({
     meta: [
-      { title: "Connexion client — Smart Mail" },
-      { name: "description", content: "Connectez-vous ou créez un compte client pour déposer et suivre vos courriers." },
+      { title: i18n.t("clientLogin.metaTitle") },
+      { name: "description", content: i18n.t("clientLogin.metaDesc") },
     ],
   }),
   component: ClientLoginPage,
 });
 
 function ClientLoginPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [prenom, setPrenom] = useState("");
@@ -30,7 +33,7 @@ function ClientLoginPage() {
     e.preventDefault();
     setError("");
     if (mode === "register" && password !== confirmPassword) {
-      setError("Les mots de passe ne correspondent pas");
+      setError(t("clientLogin.passwordsNotMatch"));
       return;
     }
     setLoading(true);
@@ -50,7 +53,7 @@ function ClientLoginPage() {
       });
       navigate({ to: ROLE_HOME[res.user.role as Role] });
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Erreur de connexion");
+      setError(err instanceof Error ? err.message : t("clientLogin.error"));
     } finally {
       setLoading(false);
     }
@@ -68,14 +71,14 @@ function ClientLoginPage() {
           <div className="h-1.5 w-32 rounded-full mb-6"
             style={{ background: "linear-gradient(90deg,#FDB913,#D6377B,#8B3FA8,#2EC4B6,#1477C9)" }} />
           <h2 className="font-display text-4xl xl:text-5xl font-bold leading-tight">
-            Déposez et suivez vos courriers en ligne.
+            {t("clientLogin.leftTitle")}
           </h2>
           <p className="mt-5 text-white/70 text-base leading-relaxed">
-            Smart Mail vous permet d'adresser vos demandes à Tunisie Telecom et de suivre leur avancement en temps réel.
+            {t("clientLogin.leftDesc")}
           </p>
         </div>
         <div className="relative z-10 text-xs text-white/50">
-          © 2026 Tunisie Telecom — Smart Mail
+          {t("clientLogin.leftFooter")}
         </div>
       </div>
 
@@ -83,8 +86,8 @@ function ClientLoginPage() {
       <div className="flex items-center justify-center p-6 sm:p-10 bg-background">
         <form onSubmit={submit} className="w-full max-w-md">
           <div className="lg:hidden mb-8"><Logo /></div>
-          <h1 className="font-display text-3xl font-bold">Espace client</h1>
-          <p className="mt-2 text-muted-foreground text-sm">Connectez-vous ou créez votre compte.</p>
+          <h1 className="font-display text-3xl font-bold">{t("clientLogin.title")}</h1>
+          <p className="mt-2 text-muted-foreground text-sm">{t("clientLogin.desc")}</p>
 
           <div className="mt-6 flex rounded-lg border p-1 bg-muted">
             <button
@@ -94,7 +97,7 @@ function ClientLoginPage() {
                 mode === "login" ? "bg-card shadow-sm" : "text-muted-foreground"
               }`}
             >
-              Se connecter
+              {t("clientLogin.tabLogin")}
             </button>
             <button
               type="button"
@@ -103,29 +106,29 @@ function ClientLoginPage() {
                 mode === "register" ? "bg-card shadow-sm" : "text-muted-foreground"
               }`}
             >
-              Créer un compte
+              {t("clientLogin.tabRegister")}
             </button>
           </div>
 
           <div className="mt-6 space-y-5">
             {mode === "register" && (
               <div className="grid grid-cols-2 gap-3">
-                <Field label="Prénom" icon={<User className="h-4 w-4" />}>
+                <Field label={t("clientLogin.firstName")} icon={<User className="h-4 w-4" />}>
                   <input
                     type="text"
                     value={prenom}
                     onChange={e => setPrenom(e.target.value)}
-                    placeholder="Prénom"
+                    placeholder={t("clientLogin.firstName")}
                     required
                     className="w-full bg-transparent outline-none text-sm py-2.5"
                   />
                 </Field>
-                <Field label="Nom" icon={<User className="h-4 w-4" />}>
+                <Field label={t("clientLogin.lastName")} icon={<User className="h-4 w-4" />}>
                   <input
                     type="text"
                     value={nom}
                     onChange={e => setNom(e.target.value)}
-                    placeholder="Nom"
+                    placeholder={t("clientLogin.lastName")}
                     required
                     className="w-full bg-transparent outline-none text-sm py-2.5"
                   />
@@ -133,23 +136,23 @@ function ClientLoginPage() {
               </div>
             )}
 
-            <Field label="Email" icon={<Mail className="h-4 w-4" />}>
+            <Field label={t("clientLogin.email")} icon={<Mail className="h-4 w-4" />}>
               <input
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="votre@email.tn"
+                placeholder={t("clientLogin.emailPlaceholder")}
                 required
                 className="w-full bg-transparent outline-none text-sm py-2.5"
               />
             </Field>
 
             <Field
-              label="Mot de passe"
+              label={t("clientLogin.password")}
               icon={<Lock className="h-4 w-4" />}
               right={
                 <Link to="/client/forgot-password" className="text-xs text-primary-bright hover:underline">
-                  Oublié ?
+                  {t("clientLogin.forgotPassword")}
                 </Link>
               }
             >
@@ -157,7 +160,7 @@ function ClientLoginPage() {
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                placeholder="Minimum 6 caractères"
+                placeholder={t("clientLogin.passwordMin")}
                 required
                 minLength={6}
                 className="w-full bg-transparent outline-none text-sm py-2.5"
@@ -165,7 +168,7 @@ function ClientLoginPage() {
             </Field>
 
             {mode === "register" && (
-              <Field label="Confirmer le mot de passe" icon={<Lock className="h-4 w-4" />}>
+              <Field label={t("clientLogin.confirmPassword")} icon={<Lock className="h-4 w-4" />}>
                 <input
                   type="password"
                   value={confirmPassword}
@@ -190,19 +193,19 @@ function ClientLoginPage() {
               className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground font-semibold text-sm py-3 hover:opacity-95 transition disabled:opacity-60"
             >
               {loading ? (
-                mode === "login" ? "Connexion…" : "Création…"
+                mode === "login" ? t("clientLogin.loggingIn") : t("clientLogin.registering")
               ) : (
                 <>
-                  <span>{mode === "login" ? "Se connecter" : "Créer mon compte"}</span>
+                  <span>{mode === "login" ? t("clientLogin.submitLogin") : t("clientLogin.submitRegister")}</span>
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
             </button>
 
             <div className="text-center text-sm">
-              Vous êtes un agent ?{" "}
+              {t("clientLogin.agentPrompt")}{" "}
               <Link to="/login" className="text-primary-bright font-medium hover:underline">
-                Connexion interne
+                {t("clientLogin.internalLogin")}
               </Link>
             </div>
           </div>

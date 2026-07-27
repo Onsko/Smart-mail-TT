@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { Cog, ShoppingBag, Users, Wallet, Pencil } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -14,11 +15,12 @@ const services: { name: string; icon: ReactNode; agents: number; courriers: numb
 ];
 
 function ServicesPage() {
+  const { t } = useTranslation();
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="font-display text-xl font-semibold">Services</h2>
-        <p className="text-sm text-muted-foreground">Vue d'ensemble des 4 services métiers.</p>
+        <h2 className="font-display text-xl font-semibold">{t("services.title")}</h2>
+        <p className="text-sm text-muted-foreground">{t("services.desc")}</p>
       </div>
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {services.map(s => (
@@ -33,11 +35,11 @@ function ServicesPage() {
             <div className="p-5 grid grid-cols-2 gap-3">
               <div>
                 <div className="text-2xl font-display font-bold">{s.agents}</div>
-                <div className="text-xs text-muted-foreground">Agents</div>
+                <div className="text-xs text-muted-foreground">{t("services.agents")}</div>
               </div>
               <div>
                 <div className="text-2xl font-display font-bold">{s.courriers}</div>
-                <div className="text-xs text-muted-foreground">Courriers en cours</div>
+                <div className="text-xs text-muted-foreground">{t("services.enCours")}</div>
               </div>
             </div>
           </div>

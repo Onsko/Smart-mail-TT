@@ -1,3 +1,5 @@
+import i18n from "./i18n/config";
+
 export type Role = "SUPER_ADMIN" | "BO" | "DIRECTEUR" | "CHEF" | "AGENT" | "CLIENT";
 
 export const ROLE_HOME: Record<Role, string> = {
@@ -9,14 +11,9 @@ export const ROLE_HOME: Record<Role, string> = {
   CLIENT: "/client/deposer",
 };
 
-export const ROLE_LABEL: Record<Role, string> = {
-  SUPER_ADMIN: "Super Administrateur",
-  BO: "Bureau d'Ordre",
-  DIRECTEUR: "Directeur",
-  CHEF: "Chef de service",
-  AGENT: "Agent",
-  CLIENT: "Client",
-};
+export function getRoleLabel(role: Role): string {
+  return i18n.t(`roles.${role}`);
+}
 
 export interface SessionUser {
   name: string;

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { FileText, Upload, Loader2 } from "lucide-react";
 import { courriersApi, uploadDocument, type CreateCourrierPayload } from "@/lib/api";
 
@@ -12,6 +13,7 @@ function today() {
 }
 
 function CourrierSortantPage() {
+  const { t } = useTranslation();
   const [form, setForm] = useState<CreateCourrierPayload>({
     type: "SORTANT",
     date: today(),
@@ -42,7 +44,7 @@ function CourrierSortantPage() {
       const uploaded = await uploadDocument(selected);
       update("documents", [uploaded.url]);
     } catch (err) {
-      setMessage({ type: "error", text: err instanceof Error ? err.message : "Échec de l'upload" });
+      setMessage({ type: "error", text: err instanceof Error ? err.message : t("bo.outgoing.uploadError") });
     } finally {
       setUploading(false);
     }
@@ -54,7 +56,7 @@ function CourrierSortantPage() {
     setMessage(null);
     try {
       await courriersApi.create(form);
-      setMessage({ type: "success", text: "Courrier sortant enregistré avec succès." });
+      setMessage({ type: "success", text: t("bo.outgoing.success") });
       setForm({
         type: "SORTANT",
         date: today(),
@@ -67,7 +69,7 @@ function CourrierSortantPage() {
       });
       setFile(null);
     } catch (err) {
-      setMessage({ type: "error", text: err instanceof Error ? err.message : "Erreur serveur" });
+      setMessage({ type: "error", text: err instanceof Error ? err.message : t("bo.outgoing.serverError") });
     } finally {
       setLoading(false);
     }
@@ -76,8 +78,8 @@ function CourrierSortantPage() {
   return (
     <div className="max-w-4xl">
       <form onSubmit={submit} className="rounded-xl bg-card border shadow-sm p-6">
-        <h2 className="font-display text-xl font-semibold">Nouveau courrier sortant</h2>
-        <p className="text-sm text-muted-foreground">Enregistrez un courrier au départ.</p>
+        <h2 className="font-display text-xl font-semibold">{t("bo.outgoing.title")}</h2>
+        <p className="text-sm text-muted-foreground">{t("bo.outgoing.desc")}</p>
 
         {message && (
           <div
@@ -92,10 +94,10 @@ function CourrierSortantPage() {
         )}
 
         <div className="mt-6 grid sm:grid-cols-2 gap-4">
-          <Field label="Date de départ">
+          <Field label={t("bo.outgoing.dateDepart")}>
             <input type="date" value={form.date} onChange={(e) => update("date", e.target.value)} className={inp} />
           </Field>
-          <Field label="Nombre de pièces">
+          <Field label={t("bo.outgoing.nbPieces")}>
             <input
               type="number"
               min={1}
@@ -104,43 +106,43 @@ function CourrierSortantPage() {
               className={inp}
             />
           </Field>
-          <Field label="Destinataire" className="sm:col-span-2">
-            <input value={form.correspondant} onChange={(e) => update("correspondant", e.target.value)} className={inp} placeholder="Nom / Organisation" />
+          <Field label={t("bo.outgoing.destinataire")} className="sm:col-span-2">
+            <input value={form.correspondant} onChange={(e) => update("correspondant", e.target.value)} className={inp} placeholder={t("bo.outgoing.destinatairePlaceholder")} />
           </Field>
-          <Field label="Objet" className="sm:col-span-2">
-            <input value={form.objet} onChange={(e) => update("objet", e.target.value)} className={inp} placeholder="Objet du courrier" />
+          <Field label={t("bo.outgoing.objet")} className="sm:col-span-2">
+            <input value={form.objet} onChange={(e) => update("objet", e.target.value)} className={inp} placeholder={t("bo.outgoing.objetPlaceholder")} />
           </Field>
-          <Field label="Contenu" className="sm:col-span-2">
+          <Field label={t("bo.outgoing.contenu")} className="sm:col-span-2">
             <textarea
               rows={6}
               value={form.contenu}
               onChange={(e) => update("contenu", e.target.value)}
               className={inp + " resize-none"}
-              placeholder="Corps du courrier sortant…"
+              placeholder={t("bo.outgoing.contenuPlaceholder")}
             />
           </Field>
-          <Field label="Observation" className="sm:col-span-2">
+          <Field label={t("bo.outgoing.observation")} className="sm:col-span-2">
             <textarea
               rows={3}
               value={form.observation}
               onChange={(e) => update("observation", e.target.value)}
               className={inp + " resize-none"}
-              placeholder="Observation éventuelle…"
+              placeholder={t("bo.outgoing.observationPlaceholder")}
             />
           </Field>
         </div>
 
         <div className="mt-6">
-          <label className="text-sm font-medium block mb-1.5">Document joint</label>
+          <label className="text-sm font-medium block mb-1.5">{t("bo.outgoing.document")}</label>
           <label className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed py-8 cursor-pointer hover:bg-accent/40 transition">
             <Upload className="h-6 w-6 text-muted-foreground" />
-            <span className="text-sm">Glissez un PDF/Image ou <span className="text-primary-bright font-medium">parcourez</span></span>
+            <span className="text-sm">{t("bo.outgoing.uploadHint")} <span className="text-primary-bright font-medium">{t("bo.outgoing.uploadBrowse")}</span></span>
             <input type="file" className="hidden" accept=".pdf,image/*" onChange={handleFileChange} />
           </label>
           {uploading && (
             <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Téléversement…
+                {t("bo.outgoing.uploading")}
             </div>
           )}
           {file && !uploading && (
@@ -154,10 +156,10 @@ function CourrierSortantPage() {
 
         <div className="mt-6 flex justify-end gap-2">
           <button type="button" className="rounded-md border px-4 py-2 text-sm" onClick={() => setFile(null)}>
-            Annuler
+            {t("bo.outgoing.cancel")}
           </button>
           <button type="submit" disabled={loading} className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium disabled:opacity-60">
-            {loading ? "Enregistrement…" : "Enregistrer"}
+            {loading ? t("bo.outgoing.saving") : t("bo.outgoing.save")}
           </button>
         </div>
       </form>

@@ -152,7 +152,17 @@ export class CourriersService {
 
     // Resolve the target service: prefer the LLM suggestion, fall back to the
     // domaine-derived code so an existing service is always proposed.
-    const serviceCode = llm?.serviceCode || this.domaineToServiceCode(merged.domaine);
+    let serviceCode = llm?.serviceCode || this.domaineToServiceCode(merged.domaine);
+
+    // Safety net: if the raw text contains strong recruitment keywords, force RH
+    // regardless of what the LLM returned (the LLM sometimes confuses the subject
+    // of a job posting with the recipient service).
+    if (serviceCode !== 'RH') {
+      const recruitmentPattern = /\b(candidature|recrutement|offre d[''']emploi|embauche|poste à pourvoir|postuler|recrute|توظيف|انتداب|منصب شغل|مترشح|مطلب شغل|ترشح)\b/i;
+      if (recruitmentPattern.test(rawText)) {
+        serviceCode = 'RH';
+      }
+    }
     const { serviceId, serviceName } = await this.resolveService(serviceCode);
 
     const resume = llm?.resume || '';

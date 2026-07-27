@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Logo } from "@/components/Logo";
 import { setSession, ROLE_HOME, type Role } from "@/lib/auth";
 import { authApi, saveToken } from "@/lib/api";
@@ -16,6 +17,7 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -39,7 +41,7 @@ function LoginPage() {
       });
       navigate({ to: ROLE_HOME[res.user.role as Role] });
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Erreur de connexion");
+      setError(err instanceof Error ? err.message : t("login.error"));
     } finally {
       setLoading(false);
     }
@@ -57,15 +59,14 @@ function LoginPage() {
           <div className="h-1.5 w-32 rounded-full mb-6"
             style={{ background: "linear-gradient(90deg,#FDB913,#D6377B,#8B3FA8,#2EC4B6,#1477C9)" }} />
           <h2 className="font-display text-4xl xl:text-5xl font-bold leading-tight">
-            Réceptionnez, orientez, traitez — en un seul flux.
+            {t("login.leftTitle")}
           </h2>
           <p className="mt-5 text-white/70 text-base leading-relaxed">
-            Smart Mail unifie tous les courriers de Tunisie Telecom et vous assiste
-            à chaque étape grâce à l'intelligence artificielle.
+            {t("login.leftDesc")}
           </p>
         </div>
         <div className="relative z-10 text-xs text-white/50">
-          © 2026 Tunisie Telecom — Smart Mail
+          {t("login.leftFooter")}
         </div>
       </div>
 
@@ -73,24 +74,24 @@ function LoginPage() {
       <div className="flex items-center justify-center p-6 sm:p-10 bg-background">
         <form onSubmit={submit} className="w-full max-w-md">
           <div className="lg:hidden mb-8"><Logo /></div>
-          <h1 className="font-display text-3xl font-bold">Bienvenue</h1>
-          <p className="mt-2 text-muted-foreground text-sm">Connectez-vous pour accéder à votre espace.</p>
+          <h1 className="font-display text-3xl font-bold">{t("login.welcome")}</h1>
+          <p className="mt-2 text-muted-foreground text-sm">{t("login.welcomeDesc")}</p>
 
           <div className="mt-8 space-y-5">
-            <Field label="Email" icon={<Mail className="h-4 w-4" />}>
+            <Field label={t("login.email")} icon={<Mail className="h-4 w-4" />}>
               <input
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="prenom.nom@tunisietelecom.tn"
+                placeholder={t("login.emailPlaceholder")}
                 className="w-full bg-transparent outline-none text-sm py-2.5"
               />
             </Field>
 
             <Field
-              label="Mot de passe"
+              label={t("login.password")}
               icon={<Lock className="h-4 w-4" />}
-              right={<a href="#" className="text-xs text-primary-bright hover:underline">Oublié ?</a>}
+              right={<a href="#" className="text-xs text-primary-bright hover:underline">{t("login.forgotPassword")}</a>}
             >
               <input
                 type="password"
@@ -112,13 +113,13 @@ function LoginPage() {
               disabled={loading}
               className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground font-semibold text-sm py-3 hover:opacity-95 transition disabled:opacity-60"
             >
-              {loading ? "Connexion…" : <><span>Se connecter</span> <ArrowRight className="h-4 w-4" /></>}
+              {loading ? t("login.loggingIn") : <><span>{t("login.submit")}</span> <ArrowRight className="h-4 w-4" /></>}
             </button>
 
             <div className="text-center text-sm">
-              Vous êtes un client ?{" "}
+              {t("login.clientPrompt")}{" "}
               <Link to="/client/login" className="text-primary-bright font-medium hover:underline">
-                Accès client
+                {t("login.clientAccess")}
               </Link>
             </div>
           </div>

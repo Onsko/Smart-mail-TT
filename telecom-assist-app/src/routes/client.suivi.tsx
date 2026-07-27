@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Search, Download, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
 import { courriersApi, type TrackedCourrier } from "@/lib/api";
@@ -8,16 +9,13 @@ export const Route = createFileRoute("/client/suivi")({
   component: SuiviPage,
 });
 
-const STATUT_LABEL: Record<string, string> = {
-  NOUVEAU: "Réceptionné par le Bureau d'Ordre",
-  A_AFFECTER: "En attente d'affectation",
-  A_TRAITER: "Affecté au service",
-  EN_COURS: "En cours de traitement",
-  TRAITE: "Traité",
-  CLOTURE: "Clôturé",
-};
+function getStatutLabel(status: string): string {
+  const { t } = useTranslation();
+  return t(`status.${status}`);
+}
 
 function SuiviPage() {
+  const { t } = useTranslation();
   const [ref, setRef] = useState("");
   const [result, setResult] = useState<TrackedCourrier | null>(null);
   const [loading, setLoading] = useState(false);
@@ -33,7 +31,7 @@ function SuiviPage() {
       const data = await courriersApi.trackByReference(ref.trim());
       setResult(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Courrier introuvable");
+      setError(err instanceof Error ? err.message : t("tracking.notFound"));
     } finally {
       setLoading(false);
     }
@@ -42,8 +40,8 @@ function SuiviPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-5">
       <div>
-        <h2 className="font-display text-2xl font-semibold">Suivi de votre courrier</h2>
-        <p className="text-sm text-muted-foreground">Entrez la référence reçue lors du dépôt.</p>
+        <h2 className="font-display text-2xl font-semibold">{t("tracking.title")}</h2>
+        <p className="text-sm text-muted-foreground">{t("tracking.desc")}</p>
       </div>
 
       <form onSubmit={handleSearch} className="rounded-2xl bg-card border shadow-sm p-4 flex gap-2">
@@ -52,12 +50,12 @@ function SuiviPage() {
           <input
             value={ref}
             onChange={e => setRef(e.target.value)}
-            placeholder="Ex : TT-2026-0420"
+            placeholder={t("tracking.placeholder")}
             className="w-full rounded-md border bg-background pl-9 pr-3 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
         <button disabled={loading} className="rounded-md bg-primary text-primary-foreground px-5 text-sm font-semibold disabled:opacity-60">
-          {loading ? "Recherche…" : "Rechercher"}
+          {loading ? t("tracking.searching") : t("tracking.search")}
         </button>
       </form>
 
@@ -75,7 +73,7 @@ function SuiviPage() {
               <div className="text-xs font-mono text-muted-foreground">{result.reference}</div>
               <div className="font-semibold mt-1">{result.objet}</div>
               {result.service && (
-                <div className="text-xs text-muted-foreground mt-0.5">Service : {result.service.name}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">{t("tracking.service")} {result.service.name}</div>
               )}
             </div>
             <StatusBadge status={result.statut.toLowerCase() as any} />
@@ -101,7 +99,7 @@ function SuiviPage() {
                   <CheckCircle2 className="h-4 w-4" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-sm font-medium">Réponse envoyée</div>
+                  <div className="text-sm font-medium">{t("tracking.responseSent")}</div>
                 </div>
               </li>
             ) : (
@@ -110,7 +108,7 @@ function SuiviPage() {
                   <Clock className="h-4 w-4" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-sm font-medium text-muted-foreground">Réponse en attente</div>
+                  <div className="text-sm font-medium text-muted-foreground">{t("tracking.responsePending")}</div>
                 </div>
               </li>
             )}
@@ -120,7 +118,7 @@ function SuiviPage() {
             <>
               {result.reponseEnvoyee && result.reponse && (
                 <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
-                  <div className="text-sm font-semibold">Réponse</div>
+                  <div className="text-sm font-semibold">{t("tracking.response")}</div>
                   <p className="text-sm whitespace-pre-wrap">{result.reponse}</p>
                 </div>
               )}
@@ -155,13 +153,13 @@ function SuiviPage() {
                     addText(result.objet, 16, true, '#1e40af');
                     y += 10;
                     
-                    addText(`Expéditeur : ${result.correspondant || "—"}`, 11);
-                    addText(`Service : ${result.service?.name || "—"}`, 11);
-                    addText(`Date : ${new Date(result.createdAt).toLocaleDateString("fr-FR")}`, 11);
+                    addText(`${t("tracking.sender")} ${result.correspondant || "—"}`, 11);
+                    addText(`${t("tracking.service")} ${result.service?.name || "—"}`, 11);
+                    addText(`${t("tracking.date")} ${new Date(result.createdAt).toLocaleDateString("fr-FR")}`, 11);
                     y += 10;
                     
                     // Add response content
-                    const reponseText = result.reponse || "Aucune réponse disponible.";
+                    const reponseText = result.reponse || t("tracking.noResponse");
                     addText(reponseText, 12);
                     
                     // Add footer
@@ -170,13 +168,13 @@ function SuiviPage() {
                     doc.line(margin, y, pageWidth - margin, y);
                     y += 10;
                     
-                    addText(`Tunisie Telecom — Document généré le ${new Date().toLocaleString("fr-FR")}`, 9, false, '#999999');
+                    addText(`${t("tracking.pdfFooter")} ${new Date().toLocaleString("fr-FR")}`, 9, false, '#999999');
                     
                     // Save the PDF
                     doc.save(`reponse-${result.reference}.pdf`);
                     
                   } catch (error) {
-                    console.error('Erreur lors de la génération du PDF:', error);
+                    console.error(t("tracking.pdfError"), error);
                     
                     // Fallback: Try the iframe approach
                     try {
@@ -220,13 +218,13 @@ function SuiviPage() {
                             <div class="reference">${result.reference}</div>
                             <h1 class="title">${result.objet}</h1>
                             <div class="meta">
-                              <strong>Expéditeur :</strong> ${result.correspondant || "—"}<br/>
-                              <strong>Service :</strong> ${result.service?.name || "—"}<br/>
-                              <strong>Date :</strong> ${new Date(result.createdAt).toLocaleDateString("fr-FR")}
+                              <strong>${t("tracking.sender")}</strong> ${result.correspondant || "—"}<br/>
+                              <strong>${t("tracking.service")}</strong> ${result.service?.name || "—"}<br/>
+                              <strong>${t("tracking.date")}</strong> ${new Date(result.createdAt).toLocaleDateString("fr-FR")}
                             </div>
-                            <div class="content">${(result.reponse || "Aucune réponse disponible.").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+                            <div class="content">${(result.reponse || t("tracking.noResponse")).replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
                             <div class="footer">
-                              <strong>Tunisie Telecom</strong> — Document généré le ${new Date().toLocaleString("fr-FR")}
+                              <strong>Tunisie Telecom</strong> — ${t("tracking.pdfFooter")} ${new Date().toLocaleString("fr-FR")}
                             </div>
                           </div>
                         </body>
@@ -274,14 +272,14 @@ function SuiviPage() {
                       }
                       
                     } catch (fallbackError) {
-                      console.error('Erreur avec la méthode de secours:', fallbackError);
-                      alert('Erreur lors de la génération du PDF. Fonctionnalité temporairement indisponible.');
+                      console.error(t("tracking.pdfError"), fallbackError);
+                      alert(t("tracking.pdfError"));
                     }
                   }
                 }}
                 className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2.5 text-sm font-medium hover:opacity-90"
               >
-                <Download className="h-4 w-4" /> Télécharger la réponse (PDF)
+                <Download className="h-4 w-4" /> {t("tracking.downloadPdf")}
               </button>
             </>
           )}

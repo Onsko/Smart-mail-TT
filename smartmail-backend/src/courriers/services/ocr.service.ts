@@ -14,9 +14,11 @@ export interface ExtractionResult {
   lieu?: string;
 }
 
-const FRENCH_MONTHS: Record<string, string> = {
+const MONTHS: Record<string, string> = {
   janvier: '01', fevrier: '02', mars: '03', avril: '04', mai: '05', juin: '06',
   juillet: '07', aout: '08', septembre: '09', octobre: '10', novembre: '11', decembre: '12',
+  جانفي: '01', فيفري: '02', مارس: '03', أفريل: '04', ماي: '05', جوان: '06',
+  جويلية: '07', أوت: '08', سبتمبر: '09', أكتوبر: '10', نوفمبر: '11', ديسمبر: '12',
 };
 
 // Major Tunisian cities, normalized (no accents/case) for matching.
@@ -25,6 +27,10 @@ const TUNISIAN_CITIES = new Set([
   'hammamet', 'sousse', 'monastir', 'mahdia', 'sfax', 'gabes', 'medenine', 'tataouine',
   'gafsa', 'tozeur', 'kebili', 'kairouan', 'kasserine', 'sidi bouzid', 'beja', 'jendouba',
   'le kef', 'siliana', 'zaghouan', 'djerba', 'zarzis', 'douz',
+  'تونس', 'أريانة', 'بن عروس', 'سكرة', 'المنار', 'منوبة', 'بنزرت', 'نابل',
+  'حمامات', 'سوسة', 'المنستير', 'المهدية', 'صفاقس', 'قابس', 'مدنين', 'تطاوين',
+  'قفصة', 'توزر', 'قبلي', 'القيروان', 'القصرين', 'سيدي بوزيد', 'باجة', 'جندوبة',
+  'الكاف', 'سليانة', 'زغوان', 'جربة', 'زرزيس', 'دوز',
 ]);
 
 // Day numbers written in French words ("vingt-trois" -> 23).
@@ -81,7 +87,7 @@ export class OcrService implements OnModuleDestroy {
 
   private async getWorker() {
     if (!this.worker) {
-      this.worker = await (Tesseract as any).createWorker('fra+eng');
+      this.worker = await (Tesseract as any).createWorker('ara+fra+eng');
     }
     return this.worker;
   }
@@ -99,17 +105,17 @@ export class OcrService implements OnModuleDestroy {
     const lower = clean.toLowerCase();
 
     let categorie = 'AUTRE';
-    if (this.containsAny(lower, ['réclamation', 'reclamation', 'plainte'])) categorie = 'RECLAMATION';
-    else if (this.containsAny(lower, ['demande', 'demand', 'solicitation', 'sollicitation'])) categorie = 'DEMANDE';
-    else if (this.containsAny(lower, ['facture', 'facturation', 'montant', 'prix', 'paiement'])) categorie = 'FACTURE';
-    else if (this.containsAny(lower, ['information', 'informations', 'note', 'lettre'])) categorie = 'INFORMATION';
+    if (this.containsAny(lower, ['réclamation', 'reclamation', 'plainte', 'شكاية', 'تظلم', 'شكوى'])) categorie = 'RECLAMATION';
+    else if (this.containsAny(lower, ['demande', 'demand', 'solicitation', 'sollicitation', 'طلب', 'مطلب', 'التماس'])) categorie = 'DEMANDE';
+    else if (this.containsAny(lower, ['facture', 'facturation', 'montant', 'prix', 'paiement', 'فاتورة', 'فاتور', 'تسديد'])) categorie = 'FACTURE';
+    else if (this.containsAny(lower, ['information', 'informations', 'note', 'lettre', 'معلومات', 'إعلام', 'إشعار', 'بلاغ'])) categorie = 'INFORMATION';
 
     const domaine = this.detectDomaine(lower);
 
     let priorite = 'MOYENNE';
-    if (this.containsAny(lower, ['urgent', 'critique', 'immédiat', 'immediat', 'sans délai', 'priorité haute', 'panne', 'hors service', 'paralyse', 'pertes financières', 'dans les plus brefs délais'])) priorite = 'HAUTE';
-    else if (this.containsAny(lower, ['relance', 'rappel', 'réitération', 'non respect', 'délai dépassé'])) priorite = 'HAUTE';
-    else if (this.containsAny(lower, ['basse', 'peu urgent', 'à titre informatif'])) priorite = 'BASSE';
+    if (this.containsAny(lower, ['urgent', 'critique', 'immédiat', 'immediat', 'sans délai', 'priorité haute', 'panne', 'hors service', 'paralyse', 'pertes financières', 'dans les plus brefs délais', 'عاجل', 'هام جدا', 'طارئ', 'فوري', 'ضروري', 'فورا', 'التدخل السريع', 'حالا', 'سريعا', 'فورية', 'عاجلة', 'مستعجل'])) priorite = 'HAUTE';
+    else if (this.containsAny(lower, ['relance', 'rappel', 'réitération', 'non respect', 'délai dépassé', 'تذكير', 'متابعة', 'إنذار', 'إخطار'])) priorite = 'HAUTE';
+    else if (this.containsAny(lower, ['basse', 'peu urgent', 'à titre informatif', 'منخفض', 'غير عاجل', 'للمعلومة'])) priorite = 'BASSE';
 
     const { date, lieu } = this.extractDateLieu(lines);
     const objet = this.extractObjet(lines, clean);
@@ -139,17 +145,24 @@ export class OcrService implements OnModuleDestroy {
     for (const line of lines.slice(0, 10)) {
       if (date) break;
       // "Ville, le 29 juin 2026"
-      let lm = line.match(/^([A-Za-zÀ-ÿ'’\-\s]{2,40}?)\s*,\s*le\s+([\wûéèàôî\-]+)\s+([A-Za-zûéèàôî]+)\s+(\d{4})/i);
+      let lm = line.match(/^([A-Za-zÀ-ÿ'’\-\s\u0600-\u06FF]{2,40}?)\s*,\s*le\s+([\wûéèàôî\-]+)\s+([A-Za-zûéèàôî]+)\s+(\d{4})/i);
       if (lm) {
         date = this.toIsoDate(this.parseDay(lm[2]), lm[3], lm[4]);
         lieu = this.cleanLieu(lm[1]);
         continue;
       }
       // "Ville, le 03/07/2026"
-      lm = line.match(/^([A-Za-zÀ-ÿ'’\-\s]{2,40}?)\s*,\s*le\s+(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/i);
+      lm = line.match(/^([A-Za-zÀ-ÿ'’\-\s\u0600-\u06FF]{2,40}?)\s*,\s*le\s+(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/i);
       if (lm) {
         date = `${lm[4]}-${lm[3].padStart(2, '0')}-${lm[2].padStart(2, '0')}`;
         lieu = this.cleanLieu(lm[1]);
+        continue;
+      }
+      // "Ville en date du 29 juin 2026"
+      lm = line.match(/^([\u0600-\u06FF\s]{2,40}?)\s+(?:في|بتاريخ)\s+(\d{1,2})\s+([\u0600-\u06FF]+)\s+(\d{4})/);
+      if (lm) {
+        date = this.toIsoDate(lm[2], lm[3], lm[4]);
+        lieu = lm[1].trim();
         continue;
       }
       // "le 29 juin 2026" (no place on this line)
@@ -162,6 +175,13 @@ export class OcrService implements OnModuleDestroy {
       lm = line.match(/(?:date\s*:\s*)?\b(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})\b/i);
       if (lm) {
         date = `${lm[3]}-${lm[2].padStart(2, '0')}-${lm[1].padStart(2, '0')}`;
+        continue;
+      }
+      // Arabic: "تونس في 29-06-2026" or "تونس 29/06/2026"
+      lm = line.match(/^([\u0600-\u06FF\s]{2,40}?)\s+(?:في|بتاريخ)?\s*(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+      if (lm) {
+        date = `${lm[4]}-${lm[3].padStart(2, '0')}-${lm[2].padStart(2, '0')}`;
+        lieu = lm[1].trim();
         continue;
       }
     }
@@ -225,6 +245,11 @@ export class OcrService implements OnModuleDestroy {
         { kw: 'mise en demeure', w: 3 }, { kw: 'résiliation', w: 3 }, { kw: 'resiliation', w: 3 },
         { kw: 'contrat', w: 2 }, { kw: 'contractuel', w: 2 }, { kw: 'engagements contractuels', w: 3 },
         { kw: 'contentieux', w: 2 },
+        // Arabe
+        { kw: 'عرض', w: 3 }, { kw: 'اشتراك', w: 2 }, { kw: 'عقد', w: 2 },
+        { kw: 'إلغاء', w: 3 }, { kw: 'شراكة', w: 3 }, { kw: 'تعريفة', w: 2 },
+        { kw: 'أسعار', w: 2 }, { kw: 'بيع', w: 2 }, { kw: 'زبون', w: 2 },
+        { kw: 'عملاء', w: 2 }, { kw: 'تسويق', w: 2 }, { kw: 'تجاري', w: 2 },
       ],
       TECHNIQUE: [
         { kw: 'panne', w: 3 }, { kw: 'coupure', w: 3 }, { kw: 'dysfonctionnement', w: 3 },
@@ -235,16 +260,39 @@ export class OcrService implements OnModuleDestroy {
         { kw: 'connectivite', w: 1 }, { kw: 'connexion', w: 1 }, { kw: 'internet', w: 1 },
         { kw: 'réseau', w: 1 }, { kw: 'reseau', w: 1 }, { kw: 'débit', w: 2 }, { kw: 'debit', w: 2 },
         { kw: 'couverture mobile', w: 2 }, { kw: 'technique', w: 1 },
+        // Arabe
+        { kw: 'عطب', w: 3 }, { kw: 'أعطاب', w: 3 }, { kw: 'انقطاع', w: 3 },
+        { kw: 'خلل', w: 3 }, { kw: 'ألياف', w: 2 }, { kw: 'اتصال', w: 1 },
+        { kw: 'إنترنت', w: 1 }, { kw: 'شبكة', w: 1 }, { kw: 'ربط', w: 2 },
+        { kw: 'تركيب', w: 2 }, { kw: 'بريد', w: 3 }, { kw: 'تقني', w: 1 },
+        { kw: 'صيانة', w: 2 }, { kw: 'تطبيق', w: 1 }, { kw: 'هاتف', w: 1 },
+        { kw: 'جوال', w: 1 },
       ],
       FINANCE: [
         { kw: 'facture', w: 3 }, { kw: 'facturation', w: 3 }, { kw: 'paiement', w: 2 },
         { kw: 'remboursement', w: 2 }, { kw: 'montant', w: 1 }, { kw: 'comptable', w: 2 },
         { kw: 'budget', w: 1 }, { kw: 'frais', w: 1 }, { kw: 'impayé', w: 2 },
+        // Arabe
+        { kw: 'فاتورة', w: 3 }, { kw: 'فواتير', w: 3 }, { kw: 'تسديد', w: 2 },
+        { kw: 'دفع', w: 2 }, { kw: 'استرجاع', w: 2 }, { kw: 'مبلغ', w: 1 },
+        { kw: 'محاسبة', w: 2 }, { kw: 'ميزانية', w: 1 }, { kw: 'مصاريف', w: 1 },
+        { kw: 'متخلدات', w: 2 }, { kw: 'ديون', w: 2 },
       ],
       RH: [
         { kw: 'ressources humaines', w: 3 }, { kw: 'recrutement', w: 3 }, { kw: 'salaire', w: 2 },
         { kw: 'congé', w: 2 }, { kw: 'personnel', w: 1 }, { kw: 'accident de travail', w: 3 },
         { kw: 'arrêt maladie', w: 3 }, { kw: 'médecin du travail', w: 3 },
+        { kw: 'candidature', w: 4 }, { kw: 'offre d\'emploi', w: 3 },
+        { kw: 'poste à pourvoir', w: 3 }, { kw: 'curriculum vitae', w: 3 }, { kw: 'cv', w: 2 },
+        { kw: 'embauche', w: 3 }, { kw: 'recrute', w: 2 },
+        { kw: 'recruteur', w: 2 }, { kw: 'stage', w: 2 }, { kw: 'stagiaire', w: 2 },
+        { kw: 'contrat de travail', w: 2 }, { kw: 'postuler', w: 3 },
+        // Arabe
+        { kw: 'توظيف', w: 4 }, { kw: 'انتداب', w: 4 }, { kw: 'مطلب شغل', w: 3 },
+        { kw: 'منصب شغل', w: 3 }, { kw: 'مترشح', w: 3 }, { kw: 'ترشح', w: 3 },
+        { kw: 'سيرة ذاتية', w: 3 }, { kw: 'راتب', w: 2 }, { kw: 'أجير', w: 2 },
+        { kw: 'إجازة', w: 2 }, { kw: 'عطلة', w: 2 }, { kw: 'موارد بشرية', w: 3 },
+        { kw: 'شؤون اجتماعية', w: 2 }, { kw: 'تكوين', w: 2 }, { kw: 'تأديب', w: 2 },
       ],
     };
 
@@ -264,17 +312,17 @@ export class OcrService implements OnModuleDestroy {
   // body). Fall back to the collapsed-text regex, then to content inference.
   private extractObjet(lines: string[], clean: string): string {
     for (const line of lines) {
-      const lm = line.match(/^\s*(?:objet|sujet|concerne|subject|object)\s*:?\s*(.+)$/i);
+      const lm = line.match(/^\s*(?:objet|sujet|concerne|subject|object|الموضوع|بخصوص|في شأن|شأن)\s*:?\s*(.+)$/i);
       if (lm && lm[1].trim().length > 3) {
         // The objet stops at the salutation if both share the same line.
         const value = lm[1].split(
-          /\s+(?:monsieur|madame|mesdames|messieurs|mademoiselle|bonjour|cher|ch[eè]re|chers)\b/i,
+          /\s+(?:monsieur|madame|mesdames|messieurs|mademoiselle|bonjour|cher|ch[eè]re|chers|السيد|السيدة|السياد|حضرة)\b/i,
         )[0];
         return this.cleanValue(value);
       }
     }
     const m = clean.match(
-      /\b(?:objet|sujet|concerne|subject|object)\s*:?\s*(.+?)(?=\s+(?:monsieur|madame|mesdames|messieurs|mademoiselle|bonjour|cher|ch[eè]re|chers|à\s+l['’]attention|je\s+me\s+permets|je\s+vous|nous\s+vous|par\s+la\s+pr[eé]sente)\b|[.!?]\s|$)/i,
+      /\b(?:objet|sujet|concerne|subject|object|الموضوع|بخصوص|في شأن|شأن)\s*:?\s*(.+?)(?=\s+(?:monsieur|madame|mesdames|messieurs|mademoiselle|bonjour|cher|ch[eè]re|chers|à\s+l['’]attention|je\s+me\s+permets|je\s+vous|nous\s+vous|par\s+la\s+pr[eé]sente|السيد|السيدة|السياد|حضرة)\b|[.!?]\s|$)/i,
     );
     if (m && m[1].trim().length > 3) return this.cleanValue(m[1]);
     return this.inferObjetFromContent(clean);
@@ -282,7 +330,7 @@ export class OcrService implements OnModuleDestroy {
 
   private toIsoDate(day: string, monthName: string, year: string): string | undefined {
     const key = monthName.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    const month = FRENCH_MONTHS[key];
+    const month = MONTHS[key];
     if (!month) return undefined;
     return `${year}-${month}-${day.padStart(2, '0')}`;
   }
@@ -302,7 +350,7 @@ export class OcrService implements OnModuleDestroy {
       if (this.isClosing(line) || this.isSalutation(line)) continue;
       if (line.length < 3 || line.length > 90) continue;
       const name = this.extractName(line);
-      if (name && /[A-Za-zÀ-ÿ]/.test(name)) return name;
+      if (name && (/[A-Za-zÀ-ÿ]/.test(name) || /[\u0600-\u06FF]/.test(name))) return name;
     }
     return '';
   }
@@ -316,16 +364,16 @@ export class OcrService implements OnModuleDestroy {
 
   private isClosing(line: string): boolean {
     const s = line.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    return /(salutations|cordialement|agreer|comptant sur|dans l['’ ]attente|veuillez|je vous remercie|sentiments|respectueuses)/.test(s);
+    return /(salutations|cordialement|agreer|comptant sur|dans l['’ ]attente|veuillez|je vous remercie|sentiments|respectueuses|وتفضلوا|وتقبلوا|الإحترام|التقدير|المخلص|سلام|تحياتي|احتراماتي|محترم)/.test(s);
   }
 
   private isSalutation(line: string): boolean {
     const s = line.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-    return /^(monsieur|madame|mesdames|messieurs|mademoiselle|cher|chere|chers|a l['’ ]attention)/.test(s);
+    return /^(monsieur|madame|mesdames|messieurs|mademoiselle|cher|chere|chers|a l['’ ]attention|السيد|السيدة|السياد|حضرة|سعادة)/.test(s);
   }
 
   private inferObjetFromContent(text: string): string {
-    const m = text.match(/(?:demande de|demande d'|sujet de|concernant|relatif à|relative à|pour|afin de)\s+([^.,;:!?]{5,80})/i);
+    const m = text.match(/(?:demande de|demande d'|sujet de|concernant|relatif à|relative à|pour|afin de|بخصوص|في شأن|شأن)\s+([^.,;:!?]{5,80})/i);
     if (m) return this.cleanValue(m[0]);
     return this.firstSentence(text);
   }
@@ -342,13 +390,13 @@ export class OcrService implements OnModuleDestroy {
 
     // Drop a leading recipient salutation block, e.g. "Monsieur le Responsable Technique,".
     body = body.replace(
-      /^[\s,:.\-]*(?:(?:monsieur|madame|mesdames|messieurs|mademoiselle|cher|ch[eè]re|chers|à\s+l['’]attention[^,]*)[^,]*,\s*)+/i,
+      /^[\s,:.\-]*(?:(?:monsieur|madame|mesdames|messieurs|mademoiselle|cher|ch[eè]re|chers|à\s+l['’]attention[^,]*|السيد|السيدة|السياد|حضرة|سعادة)[^,]*,\s*)+/i,
       '',
     );
 
     // Cut off the closing formula and signature at the end.
     const close = body.match(
-      /\b(comptant sur|veuillez agr[eé]er|je vous prie d['’]agr[eé]er|dans l['’ ]attente|je vous remercie|cordialement|salutations|sentiments)/i,
+      /\b(comptant sur|veuillez agr[eé]er|je vous prie d['’]agr[eé]er|dans l['’ ]attente|je vous remercie|cordialement|salutations|sentiments|وتفضلوا|وتقبلوا|الإحترام|التقدير|المخلص|سلام|تحياتي|احتراماتي)/i,
     );
     if (close && close.index !== undefined && close.index > 50) {
       body = body.slice(0, close.index);

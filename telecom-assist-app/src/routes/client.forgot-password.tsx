@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import i18n from "@/lib/i18n/config";
 import { Logo } from "@/components/Logo";
 import { authApi } from "@/lib/api";
 import { Mail, Lock, KeyRound, ArrowRight, CheckCircle2 } from "lucide-react";
@@ -7,14 +9,15 @@ import { Mail, Lock, KeyRound, ArrowRight, CheckCircle2 } from "lucide-react";
 export const Route = createFileRoute("/client/forgot-password")({
   head: () => ({
     meta: [
-      { title: "Mot de passe oublié — Smart Mail" },
-      { name: "description", content: "Réinitialisez votre mot de passe client Smart Mail." },
+      { title: i18n.t("forgotPassword.metaTitle") },
+      { name: "description", content: i18n.t("forgotPassword.metaDesc") },
     ],
   }),
   component: ForgotPasswordPage,
 });
 
 function ForgotPasswordPage() {
+  const { t } = useTranslation();
   const [step, setStep] = useState<"request" | "reset" | "done">("request");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -33,7 +36,7 @@ function ForgotPasswordPage() {
       setMessage(res.message);
       setStep("reset");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Erreur lors de l'envoi");
+      setError(err instanceof Error ? err.message : t("forgotPassword.sendError"));
     } finally {
       setLoading(false);
     }
@@ -43,7 +46,7 @@ function ForgotPasswordPage() {
     e.preventDefault();
     setError("");
     if (newPassword !== confirmPassword) {
-      setError("Les mots de passe ne correspondent pas");
+      setError(t("forgotPassword.passwordsNotMatch"));
       return;
     }
     setLoading(true);
@@ -51,7 +54,7 @@ function ForgotPasswordPage() {
       await authApi.resetPassword({ email, code, newPassword });
       setStep("done");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Erreur lors de la réinitialisation");
+      setError(err instanceof Error ? err.message : t("forgotPassword.resetError"));
     } finally {
       setLoading(false);
     }
@@ -69,14 +72,14 @@ function ForgotPasswordPage() {
           <div className="h-1.5 w-32 rounded-full mb-6"
             style={{ background: "linear-gradient(90deg,#FDB913,#D6377B,#8B3FA8,#2EC4B6,#1477C9)" }} />
           <h2 className="font-display text-4xl xl:text-5xl font-bold leading-tight">
-            Retrouvez l'accès à votre espace client.
+            {t("forgotPassword.leftTitle")}
           </h2>
           <p className="mt-5 text-white/70 text-base leading-relaxed">
-            Saisissez votre email, recevez un code de vérification et choisissez un nouveau mot de passe en toute sécurité.
+            {t("forgotPassword.leftDesc")}
           </p>
         </div>
         <div className="relative z-10 text-xs text-white/50">
-          © 2026 Tunisie Telecom — Smart Mail
+          {t("forgotPassword.leftFooter")}
         </div>
       </div>
 
@@ -84,18 +87,18 @@ function ForgotPasswordPage() {
       <div className="flex items-center justify-center p-6 sm:p-10 bg-background">
         <div className="w-full max-w-md">
           <div className="lg:hidden mb-8"><Logo /></div>
-          <h1 className="font-display text-3xl font-bold">Mot de passe oublié</h1>
-          <p className="mt-2 text-muted-foreground text-sm">Réinitialisez votre mot de passe en deux étapes.</p>
+          <h1 className="font-display text-3xl font-bold">{t("forgotPassword.title")}</h1>
+          <p className="mt-2 text-muted-foreground text-sm">{t("forgotPassword.desc")}</p>
 
           <div className="mt-8">
             {step === "request" && (
               <form onSubmit={requestCode} className="space-y-5">
-                <Field label="Email" icon={<Mail className="h-4 w-4" />}>
+                <Field label={t("forgotPassword.email")} icon={<Mail className="h-4 w-4" />}>
                   <input
                     type="email"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    placeholder="votre@email.tn"
+                    placeholder={t("forgotPassword.emailPlaceholder")}
                     required
                     className="w-full bg-transparent outline-none text-sm py-2.5"
                   />
@@ -110,11 +113,11 @@ function ForgotPasswordPage() {
                   disabled={loading}
                   className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground font-semibold text-sm py-3 hover:opacity-95 transition disabled:opacity-60"
                 >
-                  {loading ? "Envoi…" : <><span>Envoyer le code</span> <ArrowRight className="h-4 w-4" /></>}
+                  {loading ? t("forgotPassword.sending") : <><span>{t("forgotPassword.sendCode")}</span> <ArrowRight className="h-4 w-4" /></>}
                 </button>
                 <div className="text-center text-sm">
                   <Link to="/client/login" className="text-primary-bright font-medium hover:underline">
-                    Retour à la connexion
+                    {t("forgotPassword.backToLogin")}
                   </Link>
                 </div>
               </form>
@@ -127,7 +130,7 @@ function ForgotPasswordPage() {
                     {message}
                   </div>
                 )}
-                <Field label="Code de vérification" icon={<KeyRound className="h-4 w-4" />}>
+                <Field label={t("forgotPassword.verificationCode")} icon={<KeyRound className="h-4 w-4" />}>
                   <input
                     type="text"
                     value={code}
@@ -138,18 +141,18 @@ function ForgotPasswordPage() {
                     className="w-full bg-transparent outline-none text-sm py-2.5"
                   />
                 </Field>
-                <Field label="Nouveau mot de passe" icon={<Lock className="h-4 w-4" />}>
+                <Field label={t("forgotPassword.newPassword")} icon={<Lock className="h-4 w-4" />}>
                   <input
                     type="password"
                     value={newPassword}
                     onChange={e => setNewPassword(e.target.value)}
-                    placeholder="Minimum 6 caractères"
+                    placeholder={t("forgotPassword.passwordMin")}
                     required
                     minLength={6}
                     className="w-full bg-transparent outline-none text-sm py-2.5"
                   />
                 </Field>
-                <Field label="Confirmer le mot de passe" icon={<Lock className="h-4 w-4" />}>
+                <Field label={t("forgotPassword.confirmPassword")} icon={<Lock className="h-4 w-4" />}>
                   <input
                     type="password"
                     value={confirmPassword}
@@ -170,7 +173,7 @@ function ForgotPasswordPage() {
                   disabled={loading}
                   className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground font-semibold text-sm py-3 hover:opacity-95 transition disabled:opacity-60"
                 >
-                  {loading ? "Mise à jour…" : <><span>Modifier le mot de passe</span> <ArrowRight className="h-4 w-4" /></>}
+                  {loading ? t("forgotPassword.updating") : <><span>{t("forgotPassword.resetButton")}</span> <ArrowRight className="h-4 w-4" /></>}
                 </button>
                 <div className="text-center text-sm">
                   <button
@@ -178,7 +181,7 @@ function ForgotPasswordPage() {
                     onClick={() => setStep("request")}
                     className="text-primary-bright font-medium hover:underline"
                   >
-                    Renvoyer un code
+                    {t("forgotPassword.resendCode")}
                   </button>
                 </div>
               </form>
@@ -190,14 +193,14 @@ function ForgotPasswordPage() {
                   <CheckCircle2 className="h-7 w-7" />
                 </div>
                 <div>
-                  <h2 className="font-display text-xl font-semibold">Mot de passe mis à jour</h2>
-                  <p className="mt-2 text-sm text-muted-foreground">Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.</p>
+                  <h2 className="font-display text-xl font-semibold">{t("forgotPassword.successTitle")}</h2>
+                  <p className="mt-2 text-sm text-muted-foreground">{t("forgotPassword.successDesc")}</p>
                 </div>
                 <Link
                   to="/client/login"
                   className="inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground font-semibold text-sm py-3 px-4 hover:opacity-95 transition"
                 >
-                  Se connecter
+                  {t("forgotPassword.loginLink")}
                 </Link>
               </div>
             )}

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Upload, FileText, Sparkles, Loader2, Brain } from "lucide-react";
 import { AIPanel } from "@/components/AIPanel";
 import { PriorityBadge } from "@/components/StatusBadge";
@@ -15,33 +16,12 @@ export const Route = createFileRoute("/bo/courrier-entrant")({
   component: CourrierEntrantPage,
 });
 
-const CATEGORIES = [
-  { value: "RECLAMATION", label: "Réclamation" },
-  { value: "DEMANDE", label: "Demande" },
-  { value: "FACTURE", label: "Facture" },
-  { value: "INFORMATION", label: "Information" },
-  { value: "AUTRE", label: "Autre" },
-];
-
-const DOMAINES = [
-  { value: "TECHNIQUE", label: "Technique" },
-  { value: "RH", label: "Ressources humaines" },
-  { value: "FINANCE", label: "Finance" },
-  { value: "COMMERCIAL", label: "Commercial" },
-  { value: "AUTRE", label: "Autre" },
-];
-
-const PRIORITES = [
-  { value: "HAUTE", label: "Haute" },
-  { value: "MOYENNE", label: "Moyenne" },
-  { value: "BASSE", label: "Basse" },
-];
-
 function today() {
   return new Date().toISOString().split("T")[0];
 }
 
 function CourrierEntrantPage() {
+  const { t } = useTranslation();
   const [form, setForm] = useState<CreateCourrierPayload>({
     type: "ENTRANT",
     date: today(),
@@ -55,6 +35,28 @@ function CourrierEntrantPage() {
     priorite: "MOYENNE",
     documents: [],
   });
+
+  const CATEGORIES = [
+    { value: "RECLAMATION", label: "Réclamation" },
+    { value: "DEMANDE", label: "Demande" },
+    { value: "FACTURE", label: "Facture" },
+    { value: "INFORMATION", label: "Information" },
+    { value: "AUTRE", label: "Autre" },
+  ];
+
+  const DOMAINES = [
+    { value: "TECHNIQUE", label: "Technique" },
+    { value: "RH", label: "Ressources humaines" },
+    { value: "FINANCE", label: "Finance" },
+    { value: "COMMERCIAL", label: "Commercial" },
+    { value: "AUTRE", label: "Autre" },
+  ];
+
+  const PRIORITES = [
+    { value: "HAUTE", label: "Haute" },
+    { value: "MOYENNE", label: "Moyenne" },
+    { value: "BASSE", label: "Basse" },
+  ];
 
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -82,7 +84,7 @@ function CourrierEntrantPage() {
       const uploaded = await uploadDocument(selected);
       update("documents", [uploaded.url]);
     } catch (err) {
-      setMessage({ type: "error", text: err instanceof Error ? err.message : "Échec de l'upload" });
+      setMessage({ type: "error", text: err instanceof Error ? err.message : t("bo.incoming.uploadError") });
     } finally {
       setUploading(false);
     }
@@ -90,7 +92,7 @@ function CourrierEntrantPage() {
 
   async function analyze() {
     if (!file || !form.documents?.[0]) {
-      setMessage({ type: "error", text: "Téléversez d'abord un document." });
+      setMessage({ type: "error", text: t("bo.incoming.uploadFirst") });
       return;
     }
     setExtracting(true);
@@ -102,7 +104,7 @@ function CourrierEntrantPage() {
       // Check Ollama availability in the background (non-blocking).
       courriersApi.getOllamaStatus().then(s => setOllamaAvailable(s.available)).catch(() => setOllamaAvailable(false));
     } catch (err) {
-      setMessage({ type: "error", text: err instanceof Error ? err.message : "Échec de l'analyse" });
+      setMessage({ type: "error", text: err instanceof Error ? err.message : t("bo.incoming.analysisError") });
     } finally {
       setExtracting(false);
     }
@@ -110,7 +112,7 @@ function CourrierEntrantPage() {
 
   async function analyzeWithOllama() {
     if (!file || !form.documents?.[0]) {
-      setMessage({ type: "error", text: "Téléversez d'abord un document." });
+      setMessage({ type: "error", text: t("bo.incoming.uploadFirst") });
       return;
     }
     setOllamaLoading(true);
@@ -119,7 +121,7 @@ function CourrierEntrantPage() {
       const result = await courriersApi.analyzeWithOllama(form.documents[0], file.type);
       setOllamaResult(result);
     } catch (err) {
-      setMessage({ type: "error", text: err instanceof Error ? err.message : "Ollama indisponible — utilisez l'analyse standard." });
+      setMessage({ type: "error", text: err instanceof Error ? err.message : t("bo.incoming.ollamaNotDetected") });
     } finally {
       setOllamaLoading(false);
     }
@@ -137,7 +139,7 @@ function CourrierEntrantPage() {
       priorite: extracted.priorite || f.priorite,
       date: extracted.date || f.date,
     }));
-    setMessage({ type: "success", text: "Suggestions appliquées." });
+    setMessage({ type: "success", text: t("bo.incoming.suggestionsApplied") });
   }
 
   function applyOllamaResult() {
@@ -152,7 +154,7 @@ function CourrierEntrantPage() {
       priorite: ollamaResult.priorite || f.priorite,
       date: ollamaResult.date || f.date,
     }));
-    setMessage({ type: "success", text: `Analyse Ollama appliquée${ollamaResult.serviceName ? ` — service suggéré : ${ollamaResult.serviceName}` : ""}.` });
+    setMessage({ type: "success", text: `${t("bo.incoming.ollamaApplied")} ${ollamaResult.serviceName || ""}`.trim() });
   }
 
   async function submit(e: React.FormEvent) {
@@ -161,7 +163,7 @@ function CourrierEntrantPage() {
     setMessage(null);
     try {
       await courriersApi.create(form);
-      setMessage({ type: "success", text: "Courrier enregistré avec succès." });
+      setMessage({ type: "success", text: t("bo.incoming.success") });
       setForm({
         type: "ENTRANT",
         date: today(),
@@ -180,7 +182,7 @@ function CourrierEntrantPage() {
       setOllamaResult(null);
       setOllamaAvailable(null);
     } catch (err) {
-      setMessage({ type: "error", text: err instanceof Error ? err.message : "Erreur serveur" });
+      setMessage({ type: "error", text: err instanceof Error ? err.message : t("bo.incoming.serverError") });
     } finally {
       setLoading(false);
     }
@@ -190,8 +192,8 @@ function CourrierEntrantPage() {
     <div className="grid lg:grid-cols-[1fr_360px] gap-6 items-start">
       <form onSubmit={submit} className="space-y-6">
         <div className="rounded-xl bg-card border shadow-sm p-6">
-          <h2 className="font-display text-xl font-semibold">Nouveau courrier entrant</h2>
-          <p className="text-sm text-muted-foreground">Saisissez les informations ou laissez l'IA les extraire du scan.</p>
+          <h2 className="font-display text-xl font-semibold">{t("bo.incoming.title")}</h2>
+          <p className="text-sm text-muted-foreground">{t("bo.incoming.desc")}</p>
 
           {message && (
             <div
@@ -206,10 +208,10 @@ function CourrierEntrantPage() {
           )}
 
           <div className="mt-6 grid sm:grid-cols-2 gap-4">
-            <Field label="Date de réception">
+            <Field label={t("bo.incoming.dateReception")}>
               <input type="date" value={form.date} onChange={(e) => update("date", e.target.value)} className={inp} />
             </Field>
-            <Field label="Nombre de pièces">
+            <Field label={t("bo.incoming.nbPieces")}>
               <input
                 type="number"
                 min={1}
@@ -218,43 +220,43 @@ function CourrierEntrantPage() {
                 className={inp}
               />
             </Field>
-            <Field label="Expéditeur" className="sm:col-span-2">
-              <input value={form.correspondant} onChange={(e) => update("correspondant", e.target.value)} className={inp} placeholder="Nom de l'expéditeur" />
+            <Field label={t("bo.incoming.expediteur")} className="sm:col-span-2">
+              <input value={form.correspondant} onChange={(e) => update("correspondant", e.target.value)} className={inp} placeholder={t("bo.incoming.expediteurPlaceholder")} />
             </Field>
-            <Field label="Objet" className="sm:col-span-2">
-              <input value={form.objet} onChange={(e) => update("objet", e.target.value)} className={inp} placeholder="Objet du courrier" />
+            <Field label={t("bo.incoming.objet")} className="sm:col-span-2">
+              <input value={form.objet} onChange={(e) => update("objet", e.target.value)} className={inp} placeholder={t("bo.incoming.objetPlaceholder")} />
             </Field>
-            <Field label="Contenu" className="sm:col-span-2">
+            <Field label={t("bo.incoming.contenu")} className="sm:col-span-2">
               <textarea
                 rows={5}
                 value={form.contenu}
                 onChange={(e) => update("contenu", e.target.value)}
                 className={inp + " resize-none"}
-                placeholder="Contenu du courrier…"
+                placeholder={t("bo.incoming.contenuPlaceholder")}
               />
             </Field>
-            <Field label="Observation" className="sm:col-span-2">
+            <Field label={t("bo.incoming.observation")} className="sm:col-span-2">
               <textarea
                 rows={3}
                 value={form.observation}
                 onChange={(e) => update("observation", e.target.value)}
                 className={inp + " resize-none"}
-                placeholder="Observation éventuelle…"
+                placeholder={t("bo.incoming.observationPlaceholder")}
               />
             </Field>
           </div>
 
           <div className="mt-6">
-            <label className="text-sm font-medium block mb-1.5">Document scanné</label>
+            <label className="text-sm font-medium block mb-1.5">{t("bo.incoming.scannedDoc")}</label>
             <label className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed py-10 cursor-pointer hover:bg-accent/40 transition">
               <Upload className="h-6 w-6 text-muted-foreground" />
-              <span className="text-sm">Glissez un PDF/Image ou <span className="text-primary-bright font-medium">parcourez</span></span>
+              <span className="text-sm">{t("bo.incoming.uploadHint")} <span className="text-primary-bright font-medium">{t("bo.incoming.uploadBrowse")}</span></span>
               <input type="file" className="hidden" accept=".pdf,image/*" onChange={handleFileChange} />
             </label>
             {uploading && (
               <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Téléversement…
+                {t("bo.incoming.uploading")}
               </div>
             )}
             {file && !uploading && (
@@ -268,10 +270,10 @@ function CourrierEntrantPage() {
 
           <div className="mt-6 flex justify-end gap-2">
             <button type="button" className="rounded-md border px-4 py-2 text-sm" onClick={() => { setFile(null); setExtracted(null); setOllamaResult(null); setOllamaAvailable(null); }}>
-              Annuler
+              {t("bo.incoming.cancel")}
             </button>
             <button type="submit" disabled={loading} className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium disabled:opacity-60">
-              {loading ? "Enregistrement…" : "Enregistrer"}
+              {loading ? t("bo.incoming.saving") : t("bo.incoming.save")}
             </button>
           </div>
         </div>
@@ -280,48 +282,48 @@ function CourrierEntrantPage() {
       <div className="space-y-4 lg:sticky lg:top-24">
         {/* Heuristic panel */}
         {extracted && (
-          <AIPanel title="Analyse heuristique">
+          <AIPanel title={t("bo.incoming.heuristicTitle")}>
             <div className="flex items-center gap-1.5 mb-2 text-xs text-muted-foreground">
               <Sparkles className="h-3.5 w-3.5" />
-              Extraction par regex & TextRank
+              {t("bo.incoming.heuristicSubtitle")}
             </div>
             <div className="grid grid-cols-1 gap-2">
               <div>
-                <div className="text-xs text-muted-foreground">Expéditeur</div>
+                <div className="text-xs text-muted-foreground">{t("bo.incoming.heuristicField")}</div>
                 <div className="font-medium text-sm">{extracted.correspondant}</div>
               </div>
               {(extracted.date || extracted.lieu) && (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <div className="text-xs text-muted-foreground">Date</div>
+                    <div className="text-xs text-muted-foreground">{t("bo.incoming.heuristicDate")}</div>
                     <div className="font-medium text-sm">{extracted.date || "—"}</div>
                   </div>
                   <div>
-                    <div className="text-xs text-muted-foreground">Lieu</div>
+                    <div className="text-xs text-muted-foreground">{t("bo.incoming.heuristicLieu")}</div>
                     <div className="font-medium text-sm">{extracted.lieu || "—"}</div>
                   </div>
                 </div>
               )}
               <div>
-                <div className="text-xs text-muted-foreground">Objet</div>
+                <div className="text-xs text-muted-foreground">{t("bo.incoming.heuristicObjet")}</div>
                 <div className="font-medium text-sm">{extracted.objet}</div>
               </div>
               <div>
-                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Contenu</div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">{t("bo.incoming.heuristicContenu")}</div>
                 <p className="text-sm line-clamp-4">{extracted.contenu}</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3 pt-2 border-t border-ai/30">
               <div>
-                <div className="text-xs text-muted-foreground">Catégorie</div>
+                <div className="text-xs text-muted-foreground">{t("bo.incoming.heuristicCategorie")}</div>
                 <div className="font-medium text-sm">{extracted.categorie}</div>
               </div>
               <div>
-                <div className="text-xs text-muted-foreground">Domaine</div>
+                <div className="text-xs text-muted-foreground">{t("bo.incoming.heuristicDomaine")}</div>
                 <div className="font-medium text-sm">{extracted.domaine}</div>
               </div>
               <div className="col-span-2">
-                <div className="text-xs text-muted-foreground mb-1">Priorité</div>
+                <div className="text-xs text-muted-foreground mb-1">{t("bo.incoming.heuristicPriorite")}</div>
                 <PriorityBadge priority={extracted.priorite.toLowerCase() as "haute" | "moyenne" | "basse"} />
               </div>
             </div>
@@ -329,55 +331,55 @@ function CourrierEntrantPage() {
               onClick={applyExtraction}
               className="mt-3 w-full rounded-md bg-ai/30 hover:bg-ai/40 text-amber-800 text-sm font-medium py-2"
             >
-              Appliquer l'extraction heuristique
+              {t("bo.incoming.heuristicApply")}
             </button>
           </AIPanel>
         )}
 
         {/* Ollama panel */}
         {ollamaResult && (
-          <AIPanel title="Analyse Ollama (LLM)">
+          <AIPanel title={t("bo.incoming.ollamaTitle")}>
             <div className="flex items-center gap-1.5 mb-2 text-xs text-amber-800">
               <Brain className="h-3.5 w-3.5" />
-              {ollamaResult.source === "ollama" ? `Généré par ${ollamaResult.source}` : "Fallback heuristique"}
+              {ollamaResult.source === "ollama" ? `${t("bo.incoming.ollamaGenerated")} ${ollamaResult.source}` : t("bo.incoming.ollamaFallback")}
             </div>
             <div className="grid grid-cols-1 gap-2">
               <div>
-                <div className="text-xs text-muted-foreground">Expéditeur</div>
+                <div className="text-xs text-muted-foreground">{t("bo.incoming.heuristicField")}</div>
                 <div className="font-medium text-sm">{ollamaResult.correspondant}</div>
               </div>
               {(ollamaResult.date || ollamaResult.lieu) && (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <div className="text-xs text-muted-foreground">Date</div>
+                    <div className="text-xs text-muted-foreground">{t("bo.incoming.heuristicDate")}</div>
                     <div className="font-medium text-sm">{ollamaResult.date || "—"}</div>
                   </div>
                   <div>
-                    <div className="text-xs text-muted-foreground">Lieu</div>
+                    <div className="text-xs text-muted-foreground">{t("bo.incoming.heuristicLieu")}</div>
                     <div className="font-medium text-sm">{ollamaResult.lieu || "—"}</div>
                   </div>
                 </div>
               )}
               <div>
-                <div className="text-xs text-muted-foreground">Objet</div>
+                <div className="text-xs text-muted-foreground">{t("bo.incoming.heuristicObjet")}</div>
                 <div className="font-medium text-sm">{ollamaResult.objet}</div>
               </div>
               <div>
-                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Contenu</div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">{t("bo.incoming.heuristicContenu")}</div>
                 <p className="text-sm line-clamp-4">{ollamaResult.contenu}</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3 pt-2 border-t border-ai/30">
               <div>
-                <div className="text-xs text-muted-foreground">Catégorie</div>
+                <div className="text-xs text-muted-foreground">{t("bo.incoming.heuristicCategorie")}</div>
                 <div className="font-medium text-sm">{ollamaResult.categorie}</div>
               </div>
               <div>
-                <div className="text-xs text-muted-foreground">Domaine</div>
+                <div className="text-xs text-muted-foreground">{t("bo.incoming.heuristicDomaine")}</div>
                 <div className="font-medium text-sm">{ollamaResult.domaine}</div>
               </div>
               <div className="col-span-2">
-                <div className="text-xs text-muted-foreground mb-1">Priorité</div>
+                <div className="text-xs text-muted-foreground mb-1">{t("bo.incoming.heuristicPriorite")}</div>
                 <PriorityBadge priority={ollamaResult.priorite.toLowerCase() as "haute" | "moyenne" | "basse"} />
               </div>
             </div>
@@ -386,7 +388,7 @@ function CourrierEntrantPage() {
               <div className="mt-3 rounded-md border border-ai/40 bg-ai/10 p-3 space-y-2">
                 <div className="flex items-center gap-1.5 text-xs font-medium text-amber-800">
                   <Brain className="h-3.5 w-3.5" />
-                  Résumé LLM
+                  {t("bo.incoming.ollamaSummary")}
                 </div>
                 <p className="text-sm text-amber-900">{ollamaResult.resume}</p>
               </div>
@@ -394,7 +396,7 @@ function CourrierEntrantPage() {
 
             {ollamaResult.serviceName && (
               <div className="mt-2 rounded-md border border-blue-200 bg-blue-50 p-2.5">
-                <div className="text-xs text-blue-700">Service dédié suggéré</div>
+                <div className="text-xs text-blue-700">{t("bo.incoming.ollamaService")}</div>
                 <div className="font-semibold text-sm text-blue-900">{ollamaResult.serviceName}</div>
               </div>
             )}
@@ -403,7 +405,7 @@ function CourrierEntrantPage() {
               onClick={applyOllamaResult}
               className="mt-3 w-full rounded-md bg-ai/40 hover:bg-ai/50 text-amber-900 text-sm font-medium py-2"
             >
-              Appliquer l'extraction Ollama
+              {t("bo.incoming.ollamaApply")}
             </button>
           </AIPanel>
         )}
@@ -411,14 +413,14 @@ function CourrierEntrantPage() {
         {/* Action buttons when no results yet */}
         {!extracted && !ollamaResult && (
           <div className="rounded-xl border bg-card p-5 space-y-3">
-            <div className="text-sm text-muted-foreground">Téléversez un document puis lancez l'analyse IA.</div>
+            <div className="text-sm text-muted-foreground">{t("bo.incoming.ollamaNoDoc")}</div>
             <button
               onClick={analyze}
               disabled={!file || uploading || extracting}
               className="w-full inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground py-2 text-sm font-medium disabled:opacity-60"
             >
               {extracting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              {extracting ? "Analyse en cours…" : "Analyser avec l'IA"}
+              {extracting ? t("bo.incoming.ollamaAnalyzing") : t("bo.incoming.ollamaAnalyze")}
             </button>
             {ollamaAvailable && (
               <button
@@ -427,7 +429,7 @@ function CourrierEntrantPage() {
                 className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-ai/50 bg-ai/10 hover:bg-ai/20 text-amber-800 py-2 text-sm font-medium disabled:opacity-60"
               >
                 {ollamaLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Brain className="h-4 w-4" />}
-                {ollamaLoading ? "Analyse Ollama…" : "Analyser avec Ollama"}
+                {ollamaLoading ? t("bo.incoming.ollamaAnalyzingOllama") : t("bo.incoming.ollamaAnalyzeOllama")}
               </button>
             )}
           </div>
@@ -443,11 +445,11 @@ function CourrierEntrantPage() {
                 className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-ai/50 bg-ai/10 hover:bg-ai/20 text-amber-800 py-2 text-sm font-medium disabled:opacity-60"
               >
                 {ollamaLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Brain className="h-4 w-4" />}
-                {ollamaLoading ? "Analyse Ollama en cours…" : "Analyser mieux avec Ollama"}
+                {ollamaLoading ? t("bo.incoming.ollamaAnalyzingOllama") : t("bo.incoming.ollamaAnalyzeBetter")}
               </button>
             ) : (
               <div className="text-xs text-muted-foreground text-center">
-                Ollama non détecté — lancez <code className="font-mono">ollama serve</code> pour activer l'analyse LLM.
+                {t("bo.incoming.ollamaNotDetected")}
               </div>
             )}
           </>
