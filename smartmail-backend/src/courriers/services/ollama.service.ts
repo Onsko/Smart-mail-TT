@@ -59,10 +59,11 @@ export class OllamaService {
             prompt,
             stream: false,
             format: 'json',
+            keep_alive: '30m',
             options: { temperature: 0.1 },
           }),
         },
-        45000,
+        120000,
       );
 
       if (!res.ok) {
@@ -79,6 +80,97 @@ export class OllamaService {
       this.logger.warn(`Appel Ollama échoué : ${(err as Error).message}`);
       return null;
     }
+  }
+
+  async traduire(text: string, targetLang: string): Promise<string | null> {
+    const trimmed = (text || '').trim();
+    if (!trimmed) return null;
+
+    const langNames: Record<string, string> = { ar: 'arabe', fr: 'français', en: 'anglais' };
+    const targetName = langNames[targetLang] || targetLang;
+
+    const prompt = [
+      `Tu es un traducteur professionnel. Traduis le texte suivant en ${targetName}.`,
+      'Renvoie UNIQUEMENT le texte traduit, sans commentaire, sans guillemets, sans引言.',
+      '',
+      'TEXTE :',
+      '"""',
+      trimmed.slice(0, 4000),
+      '"""',
+    ].join('\n');
+
+    return this.generateText(prompt);
+  }
+
+  async chat(message: string, role: string, context?: { page?: string }): Promise<string | null> {
+    const trimmed = (message || '').trim();
+    if (!trimmed) return null;
+
+    const isClient = role === 'CLIENT';
+
+    const systemPrompt = isClient ? [
+      'Tu es un assistant virtuel du site SmartMail de Tunisie Telecom.',
+      'Tu aides les visiteurs à comprendre le service et les orienter vers les bonnes pages.',
+      'Réponds de manière courte et utile, en français ou en arabe selon la langue du message.',
+      'IMPORTANT : Tu n\'as PAS accès aux données des courriers. Tu ne peux PAS suivre un courrier.',
+      'Si l\'utilisateur demande où est son courrier ou son statut :',
+      '  1. Dis-lui d\'aller sur la page /suivi du site',
+      '  2. Il doit saisir sa référence (ex: TT-2026-000123)',
+      '  3. La référence lui a été donnée juste après avoir déposé son courrier sur la page /client/deposer',
+      '  4. Si l\'utilisateur a perdu sa référence, il doit contacter le Bureau d\'Ordre',
+      'Si la question dépasse tes connaissances, oriente vers le service client au 1810.',
+      '',
+      'SUJETS QUE TU PEUX TRAITER :',
+      '- Expliquer le service SmartMail (dépôt de réclamation, suivi)',
+      '- Expliquer comment obtenir la référence : elle s\'affiche après avoir soumis le formulaire sur /client/deposer',
+      '- Orient vers la page /suivi pour suivre un courrier avec sa référence',
+      '- Expliquer les délais de traitement standards (24-48h technique, 5-7 jours facture)',
+      '- Expliquer les statuts possibles (Nouveau, En cours, Traité, etc.)',
+      '- Coordonnées des agences Tunisie Telecom',
+      '- Comment déposer une réclamation (via le site, page /client/deposer)',
+      '',
+      'SUJETS QUE TU NE PEUX PAS TRAITER (oriente vers 1810 ou la page appropriée) :',
+      '- Suivi individuel d\'un courrier (va sur /suivi avec la référence)',
+      '- Retrouver une référence perdue (contacter le Bureau d\'Ordre)',
+      '- Problèmes techniques spécifiques (panne, connexion)',
+      '- Contestations de facture',
+      '- Données personnelles ou confidentielles',
+    ].join('\n') : [
+      'Tu es un assistant IA interne de l\'application SmartMail de Tunisie Telecom.',
+      'Tu aides les employés (BO, Directeur, Chef, Agent, Admin) à utiliser l\'application.',
+      'Tu connais toutes les fonctionnalités et pages de l\'application.',
+      'Réponds de manière claire et concise, en français ou en arabe.',
+      '',
+      'FONCTIONNALITÉS DE L\'APPLICATION :',
+      '- BO : Tableau de bord, Créer courrier entrant/sortant, Analyse IA des documents, Statistiques',
+      '- Directeur : Courriers en attente d\'affectation, Validation, Recommandations IA, Graphiques',
+      '- Chef : Kanban (À traiter/En cours/Traité), Répartition aux agents, Statistiques, Charge agents',
+      '- Agent : Mes courriers assignés, Rédaction réponse avec IA, Reformulation, Résumé, Traduction',
+      '- Admin : Gestion utilisateurs, Gestion services, Statistiques globales',
+      '- Espace client : Saisie de réclamation, Suivi par référence',
+      '',
+      'PAGES DISPONIBLES PAR RÔLE :',
+      '- BO : /bo, /bo/courrier-entrant, /bo/courrier-sortant',
+      '- Directeur : /directeur, /directeur/courrier/:id',
+      '- Chef : /chef, /chef/affectation-agent',
+      '- Agent : /agent, /agent/courrier/:id',
+      '- Admin : /admin, /admin/utilisateurs, /admin/services',
+      '',
+      `Contexte actuel : page = ${context?.page || 'inconnue'}`,
+    ].join('\n');
+
+    const prompt = [
+      systemPrompt,
+      '',
+      'MESSAGE DE L\'UTILISATEUR :',
+      '"""',
+      trimmed.slice(0, 2000),
+      '"""',
+      '',
+      'RÉPONSE :',
+    ].join('\n');
+
+    return this.generateText(prompt);
   }
 
   // Reformulate / rephrase text using the LLM. Returns null on failure.
@@ -255,10 +347,11 @@ export class OllamaService {
             model: this.model,
             prompt,
             stream: false,
+            keep_alive: '30m',
             options: { temperature: 0.3 },
           }),
         },
-        60000,
+        180000,
       );
 
       if (!res.ok) {

@@ -10,6 +10,7 @@ import {
   Sun, Moon, Monitor, Type, Languages, Minus, Plus, Palette
 } from "lucide-react";
 import { NotificationBell } from "./NotificationBell";
+import { ChatWidget } from "./ChatWidget";
 
 type NavItem = { to: string; labelKey: string; icon: ReactNode };
 
@@ -212,6 +213,7 @@ export function AppShell({ role, title }: Props) {
           <Outlet />
         </main>
       </div>
+      <ChatWidget page={pathname} />
     </div>
   );
 }

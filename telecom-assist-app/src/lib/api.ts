@@ -99,6 +99,12 @@ export interface CreateUserPayload {
   service?: string;
 }
 
+export interface UserStatsData {
+  total: number;
+  actifs: number;
+  byRole: Record<string, number>;
+}
+
 export const usersApi = {
   getAll: () => request<ApiUser[]>('/users'),
   create: (payload: CreateUserPayload) =>
@@ -118,6 +124,7 @@ export const usersApi = {
     }),
   delete: (id: string) =>
     request<void>(`/users/${id}`, { method: 'DELETE' }),
+  getStats: () => request<UserStatsData>('/users/stats'),
 };
 
 export type CourrierType = 'ENTRANT' | 'SORTANT';
@@ -131,6 +138,7 @@ export interface CreateCourrierPayload {
   date?: string;
   nombrePieces?: number;
   correspondant?: string;
+  emailClient?: string;
   objet: string;
   contenu?: string;
   observation?: string;
@@ -233,6 +241,42 @@ export interface TrackedCourrier {
   historique: { action: string; date: string }[];
 }
 
+export interface ActivityDay {
+  date: string;
+  count: number;
+}
+
+export interface ActivityByTypeDay {
+  date: string;
+  entrants: number;
+  sortants: number;
+  total: number;
+}
+
+export interface DashboardStatsData {
+  total: number;
+  byType: Record<string, number>;
+  byStatut: Record<string, number>;
+  byPriorite: Record<string, number>;
+  byDomaine: Record<string, number>;
+  activityByDay: ActivityByTypeDay[];
+}
+
+export interface ChefDashboardStatsData {
+  total: number;
+  byStatut: Record<string, number>;
+  byPriorite: Record<string, number>;
+  activityByDay: ActivityDay[];
+  agentsCharge: AgentCharge[];
+}
+
+export interface AgentDashboardStatsData {
+  total: number;
+  byStatut: Record<string, number>;
+  byPriorite: Record<string, number>;
+  activityByDay: ActivityDay[];
+}
+
 export const courriersApi = {
   getAll: () => request<Courrier[]>('/courriers'),
   getById: (id: string) => request<Courrier>(`/courriers/${id}`),
@@ -262,6 +306,16 @@ export const courriersApi = {
       method: 'POST',
       body: JSON.stringify({ text }),
     }),
+  iaTraduire: (text: string, targetLang: string) =>
+    request<{ result: string | null }>('/courriers/ia/traduire', {
+      method: 'POST',
+      body: JSON.stringify({ text, targetLang }),
+    }),
+  iaChat: (message: string, context?: { page?: string }) =>
+    request<{ result: string | null }>('/courriers/ia/chat', {
+      method: 'POST',
+      body: JSON.stringify({ message, context }),
+    }),
   iaResumer: (text: string) =>
     request<{ result: string | null }>('/courriers/ia/resumer', {
       method: 'POST',
@@ -290,6 +344,9 @@ export const courriersApi = {
       method: 'PATCH',
       body: JSON.stringify({ priorite }),
     }),
+  getStats: () => request<DashboardStatsData>('/courriers/stats'),
+  getChefStats: () => request<ChefDashboardStatsData>('/courriers/chef/stats'),
+  getAgentStats: () => request<AgentDashboardStatsData>('/courriers/agent/stats'),
   getChefCourriers: () => request<Courrier[]>('/courriers/chef/mes-courriers'),
   getAgentCourriers: () => request<Courrier[]>('/courriers/agent/mes-courriers'),
   trackByReference: (reference: string) => request<TrackedCourrier>(`/courriers/suivi/${reference}`),

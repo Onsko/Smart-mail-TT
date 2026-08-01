@@ -12,6 +12,7 @@ import { OcrService, ExtractionResult } from './services/ocr.service';
 import { RecommendationService, RecommendationResult } from './services/recommendation.service';
 import { OllamaService } from './services/ollama.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { MailService } from '../mail/mail.service';
 import { Role } from '../users/schemas/user.schema';
 
 export interface OllamaExtractionResult extends ExtractionResult {
@@ -20,6 +21,49 @@ export interface OllamaExtractionResult extends ExtractionResult {
   serviceName: string | null;
   serviceId: string | null;
   source: 'ollama' | 'heuristique';
+}
+
+export interface ActivityDay {
+  date: string;
+  count: number;
+}
+
+export interface ActivityByTypeDay {
+  date: string;
+  entrants: number;
+  sortants: number;
+  total: number;
+}
+
+export interface DashboardStats {
+  total: number;
+  byType: Record<string, number>;
+  byStatut: Record<string, number>;
+  byPriorite: Record<string, number>;
+  byDomaine: Record<string, number>;
+  activityByDay: ActivityByTypeDay[];
+}
+
+export interface ChefDashboardStats {
+  total: number;
+  byStatut: Record<string, number>;
+  byPriorite: Record<string, number>;
+  activityByDay: ActivityDay[];
+  agentsCharge: {
+    _id: string;
+    nom: string;
+    prenom: string;
+    email: string;
+    charge: number;
+    recommended: boolean;
+  }[];
+}
+
+export interface AgentDashboardStats {
+  total: number;
+  byStatut: Record<string, number>;
+  byPriorite: Record<string, number>;
+  activityByDay: ActivityDay[];
 }
 
 @Injectable()
@@ -35,11 +79,12 @@ export class CourriersService {
     private recommendationService: RecommendationService,
     private ollamaService: OllamaService,
     private notificationsService: NotificationsService,
+    private mailService: MailService,
   ) {}
 
   async create(dto: CreateCourrierDto, createdBy: string): Promise<CourrierDocument> {
     const reference = await this.referenceService.generateNext();
-    const created = new this.courrierModel({
+    const courrier = new this.courrierModel({
       ...dto,
       reference,
       createdBy: new Types.ObjectId(createdBy),
@@ -53,7 +98,15 @@ export class CourriersService {
         },
       ],
     });
-    return created.save();
+    const saved = await courrier.save();
+
+    if (dto.emailClient) {
+      this.mailService.sendCourrierNotification(dto.emailClient, reference, dto.objet).catch(err => {
+        this.logger.warn(`Échec envoi email à ${dto.emailClient} : ${err.message}`);
+      });
+    }
+
+    return saved;
   }
 
   async findAll(): Promise<CourrierDocument[]> {
@@ -98,6 +151,16 @@ export class CourriersService {
   async resumerTexte(text: string): Promise<{ result: string | null }> {
     const result = await this.ollamaService.resumer(text);
     if (!result) throw new BadRequestException('Ollama indisponible ou erreur lors du résumé');
+    return { result };
+  }
+
+  async traduireTexte(text: string, targetLang: string): Promise<{ result: string | null }> {
+    const result = await this.ollamaService.traduire(text, targetLang);
+    return { result };
+  }
+
+  async chatAssistant(message: string, role: string, context?: { page?: string }): Promise<{ result: string | null }> {
+    const result = await this.ollamaService.chat(message, role, context);
     return { result };
   }
 
@@ -376,6 +439,116 @@ export class CourriersService {
       serviceId: service._id.toString(),
       serviceName: service.name,
       agents: result,
+    };
+  }
+
+  async getStats(): Promise<DashboardStats> {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    const [typeResult, statutResult, prioriteResult, domaineResult, activityResult] = await Promise.all([
+      this.courrierModel.aggregate([{ $group: { _id: '$type', count: { $sum: 1 } } }]).exec(),
+      this.courrierModel.aggregate([{ $group: { _id: '$statut', count: { $sum: 1 } } }]).exec(),
+      this.courrierModel.aggregate([{ $group: { _id: '$priorite', count: { $sum: 1 } } }]).exec(),
+      this.courrierModel.aggregate([{ $group: { _id: '$domaine', count: { $sum: 1 } } }]).exec(),
+      this.courrierModel.aggregate([
+        { $match: { createdAt: { $gte: sevenDaysAgo } } },
+        { $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          entrants: { $sum: { $cond: [{ $eq: ['$type', 'ENTRANT'] }, 1, 0] } },
+          sortants: { $sum: { $cond: [{ $eq: ['$type', 'SORTANT'] }, 1, 0] } },
+          total: { $sum: 1 },
+        }},
+        { $sort: { _id: 1 } },
+      ]).exec(),
+    ]);
+
+    const toRecord = (arr: { _id: string; count: number }[]): Record<string, number> => {
+      const rec: Record<string, number> = {};
+      arr.forEach(item => { rec[item._id] = item.count; });
+      return rec;
+    };
+
+    return {
+      total: Object.values(toRecord(statutResult)).reduce((a, b) => a + b, 0),
+      byType: toRecord(typeResult),
+      byStatut: toRecord(statutResult),
+      byPriorite: toRecord(prioriteResult),
+      byDomaine: toRecord(domaineResult),
+      activityByDay: activityResult.map(d => ({ date: d._id, entrants: d.entrants, sortants: d.sortants, total: d.total })),
+    };
+  }
+
+  async getChefStats(userId: string): Promise<ChefDashboardStats> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user || !user.service) {
+      throw new NotFoundException('Aucun service associé à cet utilisateur');
+    }
+    const serviceId = user.service;
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    const [statutResult, prioriteResult, activityResult, agentsChargeResult] = await Promise.all([
+      this.courrierModel.aggregate([
+        { $match: { service: serviceId } },
+        { $group: { _id: '$statut', count: { $sum: 1 } } },
+      ]).exec(),
+      this.courrierModel.aggregate([
+        { $match: { service: serviceId } },
+        { $group: { _id: '$priorite', count: { $sum: 1 } } },
+      ]).exec(),
+      this.courrierModel.aggregate([
+        { $match: { service: serviceId, createdAt: { $gte: sevenDaysAgo } } },
+        { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, count: { $sum: 1 } } },
+        { $sort: { _id: 1 } },
+      ]).exec(),
+      this.getAgentsCharge(userId),
+    ]);
+
+    const toRecord = (arr: { _id: string; count: number }[]): Record<string, number> => {
+      const rec: Record<string, number> = {};
+      arr.forEach(item => { rec[item._id] = item.count; });
+      return rec;
+    };
+
+    return {
+      total: Object.values(toRecord(statutResult)).reduce((a, b) => a + b, 0),
+      byStatut: toRecord(statutResult),
+      byPriorite: toRecord(prioriteResult),
+      activityByDay: activityResult.map(d => ({ date: d._id, count: d.count })),
+      agentsCharge: agentsChargeResult.agents,
+    };
+  }
+
+  async getAgentStats(userId: string): Promise<AgentDashboardStats> {
+    const userIdObj = new Types.ObjectId(userId);
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    const [statutResult, prioriteResult, activityResult] = await Promise.all([
+      this.courrierModel.aggregate([
+        { $match: { agentAssigne: userIdObj } },
+        { $group: { _id: '$statut', count: { $sum: 1 } } },
+      ]).exec(),
+      this.courrierModel.aggregate([
+        { $match: { agentAssigne: userIdObj } },
+        { $group: { _id: '$priorite', count: { $sum: 1 } } },
+      ]).exec(),
+      this.courrierModel.aggregate([
+        { $match: { agentAssigne: userIdObj, createdAt: { $gte: sevenDaysAgo } } },
+        { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, count: { $sum: 1 } } },
+        { $sort: { _id: 1 } },
+      ]).exec(),
+    ]);
+
+    const toRecord = (arr: { _id: string; count: number }[]): Record<string, number> => {
+      const rec: Record<string, number> = {};
+      arr.forEach(item => { rec[item._id] = item.count; });
+      return rec;
+    };
+
+    return {
+      total: Object.values(toRecord(statutResult)).reduce((a, b) => a + b, 0),
+      byStatut: toRecord(statutResult),
+      byPriorite: toRecord(prioriteResult),
+      activityByDay: activityResult.map(d => ({ date: d._id, count: d.count })),
     };
   }
 

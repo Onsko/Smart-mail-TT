@@ -13,6 +13,7 @@ import { SummarizationService } from './services/summarization.service';
 import { RecommendationService } from './services/recommendation.service';
 import { OllamaService } from './services/ollama.service';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
       { name: User.name, schema: UserSchema },
     ]),
     NotificationsModule,
+    MailModule,
   ],
   controllers: [CourriersController],
   providers: [CourriersService, ReferenceService, OcrService, UploadService, SummarizationService, RecommendationService, OllamaService],

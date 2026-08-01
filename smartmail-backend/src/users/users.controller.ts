@@ -17,6 +17,12 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  @Get('stats')
+  @Roles(Role.SUPER_ADMIN)
+  getStats() {
+    return this.usersService.getStats();
+  }
+
   @Post()
   @Roles(Role.SUPER_ADMIN)
   create(@Body() dto: CreateUserDto) {

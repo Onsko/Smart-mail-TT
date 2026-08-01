@@ -58,6 +58,9 @@ export class Courrier {
   @Prop({ default: '' })
   correspondant: string;
 
+  @Prop({ default: '' })
+  emailClient: string;
+
   @Prop({ required: true })
   objet: string;
 

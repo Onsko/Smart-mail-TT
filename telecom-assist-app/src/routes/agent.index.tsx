@@ -1,9 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ClipboardList, Clock, CheckCircle2, AlertTriangle } from "lucide-react";
 import { DataTable, type Column } from "@/components/DataTable";
-import { courriersApi, type Courrier } from "@/lib/api";
+import { courriersApi, type Courrier, type AgentDashboardStatsData } from "@/lib/api";
 import { StatusBadge, PriorityBadge } from "@/components/StatusBadge";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+
+const COLORS = ["oklch(0.577 0.245 27.66)", "oklch(0.627 0.194 149.214)", "oklch(0.546 0.245 262.881)", "oklch(0.715 0.143 215.221)", "oklch(0.707 0.165 56.017)"];
 
 export const Route = createFileRoute("/agent/")({
   component: AgentPage,
@@ -14,16 +18,31 @@ function AgentPage() {
   const navigate = useNavigate();
   const [statut, setStatut] = useState("");
   const [courriers, setCourriers] = useState<Courrier[]>([]);
+  const [agentStats, setAgentStats] = useState<AgentDashboardStatsData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    courriersApi.getAgentCourriers()
-      .then(setCourriers)
-      .catch(() => setCourriers([]))
+    Promise.all([
+      courriersApi.getAgentCourriers(),
+      courriersApi.getAgentStats(),
+    ])
+      .then(([c, s]) => { setCourriers(c); setAgentStats(s); })
+      .catch(() => { setCourriers([]); setAgentStats(null); })
       .finally(() => setLoading(false));
   }, []);
 
   const data = courriers.filter(c => !statut || c.statut === statut);
+
+  const cards = agentStats ? [
+    { label: t("agent.totalAssignes") || "Total assignés", value: agentStats.total, icon: <ClipboardList className="h-5 w-5" />, color: "bg-primary-bright/15 text-primary-bright" },
+    { label: t("agent.enCours"), value: agentStats.byStatut.EN_COURS ?? 0, icon: <Clock className="h-5 w-5" />, color: "bg-info/15 text-info" },
+    { label: t("agent.traite"), value: agentStats.byStatut.TRAITE ?? 0, icon: <CheckCircle2 className="h-5 w-5" />, color: "bg-success/15 text-teal-700" },
+    { label: t("agent.urgent") || "Urgent", value: agentStats.byPriorite.HAUTE ?? 0, icon: <AlertTriangle className="h-5 w-5" />, color: "bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400" },
+  ] : [];
+
+  const statutData = agentStats ? Object.entries(agentStats.byStatut)
+    .filter(([, v]) => v > 0)
+    .map(([k, v]) => ({ name: t(`agent.${k.toLowerCase()}` as any) || k, value: v })) : [];
 
   const cols: Column<Courrier>[] = [
     { key: "reference", header: t("agent.reference"), render: r => <span className="font-mono text-xs">{r.reference}</span> },
@@ -41,6 +60,34 @@ function AgentPage() {
         <h2 className="font-display text-xl font-semibold">{t("agent.title")}</h2>
         <p className="text-sm text-muted-foreground">{t("agent.desc")}</p>
       </div>
+
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {cards.map(s => (
+          <div key={s.label} className="rounded-xl bg-card border p-5 shadow-sm">
+            <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${s.color}`}>{s.icon}</div>
+            <div className="mt-4 text-2xl font-display font-bold">{s.value}</div>
+            <div className="text-xs text-muted-foreground">{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {statutData.length > 0 && (
+        <div className="rounded-xl bg-card border p-6 shadow-sm">
+          <h3 className="font-display text-lg font-semibold mb-4">{t("agent.repartitionStatut") || "Répartition par statut"}</h3>
+          <div className="h-64 flex items-center justify-center">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={statutData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
+                  {statutData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
       <DataTable
         data={data}
         columns={cols}

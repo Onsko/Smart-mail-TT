@@ -24,6 +24,10 @@ export class CreateCourrierDto {
   @IsString()
   correspondant?: string;
 
+  @IsOptional()
+  @IsString()
+  emailClient?: string;
+
   @IsString()
   objet: string;
 

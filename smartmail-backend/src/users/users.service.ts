@@ -111,6 +111,17 @@ export class UsersService {
     if (!res) throw new NotFoundException('Utilisateur introuvable');
   }
 
+  async getStats(): Promise<{ total: number; actifs: number; byRole: Record<string, number> }> {
+    const [total, actifs, roleResult] = await Promise.all([
+      this.userModel.countDocuments().exec(),
+      this.userModel.countDocuments({ actif: true }).exec(),
+      this.userModel.aggregate([{ $group: { _id: '$role', count: { $sum: 1 } } }]).exec(),
+    ]);
+    const byRole: Record<string, number> = {};
+    roleResult.forEach((item: { _id: string; count: number }) => { byRole[item._id] = item.count; });
+    return { total, actifs, byRole };
+  }
+
   async setResetCode(email: string, code: string, expiresAt: Date): Promise<UserDocument | null> {
     return this.userModel
       .findOneAndUpdate(

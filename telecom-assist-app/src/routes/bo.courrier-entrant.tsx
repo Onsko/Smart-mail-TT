@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Upload, FileText, Sparkles, Loader2, Brain } from "lucide-react";
+import { Upload, FileText, Sparkles, Loader2, Brain, Mail } from "lucide-react";
 import { AIPanel } from "@/components/AIPanel";
 import { PriorityBadge } from "@/components/StatusBadge";
 import {
@@ -27,6 +27,7 @@ function CourrierEntrantPage() {
     date: today(),
     nombrePieces: 1,
     correspondant: "",
+    emailClient: "",
     objet: "",
     contenu: "",
     observation: "",
@@ -162,13 +163,17 @@ function CourrierEntrantPage() {
     setLoading(true);
     setMessage(null);
     try {
-      await courriersApi.create(form);
-      setMessage({ type: "success", text: t("bo.incoming.success") });
+      const created = await courriersApi.create(form);
+      const msg = created.reference
+        ? `Courrier ${created.reference} créé${form.emailClient ? ' — notification envoyée par email' : ''}`
+        : t("bo.incoming.success");
+      setMessage({ type: "success", text: msg });
       setForm({
         type: "ENTRANT",
         date: today(),
         nombrePieces: 1,
         correspondant: "",
+        emailClient: "",
         objet: "",
         contenu: "",
         observation: "",
@@ -222,6 +227,12 @@ function CourrierEntrantPage() {
             </Field>
             <Field label={t("bo.incoming.expediteur")} className="sm:col-span-2">
               <input value={form.correspondant} onChange={(e) => update("correspondant", e.target.value)} className={inp} placeholder={t("bo.incoming.expediteurPlaceholder")} />
+            </Field>
+            <Field label="Email du client (pour notification)" className="sm:col-span-2">
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input value={form.emailClient} onChange={(e) => update("emailClient", e.target.value)} className={inp + " pl-9"} placeholder="client@exemple.com" type="email" />
+              </div>
             </Field>
             <Field label={t("bo.incoming.objet")} className="sm:col-span-2">
               <input value={form.objet} onChange={(e) => update("objet", e.target.value)} className={inp} placeholder={t("bo.incoming.objetPlaceholder")} />

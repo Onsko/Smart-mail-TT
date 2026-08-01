@@ -50,6 +50,26 @@ export class CourriersController {
     return this.courriersService.findByReference(reference);
   }
 
+  @Get('stats')
+  @Roles(Role.BO, Role.SUPER_ADMIN, Role.DIRECTEUR)
+  async getStats() {
+    return this.courriersService.getStats();
+  }
+
+  @Get('chef/stats')
+  @Roles(Role.CHEF, Role.SUPER_ADMIN)
+  async getChefStats(@Req() req: Request) {
+    const user = req.user as { _id: { toString: () => string } };
+    return this.courriersService.getChefStats(user._id.toString());
+  }
+
+  @Get('agent/stats')
+  @Roles(Role.AGENT, Role.SUPER_ADMIN)
+  async getAgentStats(@Req() req: Request) {
+    const user = req.user as { _id: { toString: () => string } };
+    return this.courriersService.getAgentStats(user._id.toString());
+  }
+
   @Get(':id')
   @Roles(Role.BO, Role.SUPER_ADMIN, Role.DIRECTEUR, Role.CHEF, Role.AGENT)
   async findById(@Param('id') id: string) {
@@ -91,6 +111,20 @@ export class CourriersController {
   @Roles(Role.AGENT, Role.SUPER_ADMIN)
   async resumer(@Body() body: { text: string }) {
     return this.courriersService.resumerTexte(body.text);
+  }
+
+  @Post('ia/traduire')
+  @Roles(Role.AGENT, Role.SUPER_ADMIN)
+  async traduire(@Body() body: { text: string; targetLang: string }) {
+    return this.courriersService.traduireTexte(body.text, body.targetLang);
+  }
+
+  @Post('ia/chat')
+  @Roles(Role.CLIENT, Role.BO, Role.SUPER_ADMIN, Role.DIRECTEUR, Role.CHEF, Role.AGENT)
+  async chat(@Body() body: { message: string; context?: { page?: string } }, @Req() req: Request) {
+    const user = req.user as { role?: string } | undefined;
+    const role = user?.role || 'CLIENT';
+    return this.courriersService.chatAssistant(body.message, role, body.context);
   }
 
   @Post('ia/generer-reponse')

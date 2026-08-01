@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { courriersApi, uploadDocument, type Courrier } from "@/lib/api";
+import { Languages } from "lucide-react";
 import { AIPanel } from "@/components/AIPanel";
 import { StatusBadge, PriorityBadge } from "@/components/StatusBadge";
 import { FileText, Upload, Sparkles, RefreshCw, AlignLeft, Clock, Loader2, CheckCircle2 } from "lucide-react";
@@ -194,6 +195,27 @@ function AgentCourrierDetail() {
                 <IABtn onClick={() => gen("draft")}    icon={iaLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />} disabled={iaLoading}>Générer une réponse</IABtn>
                 <IABtn onClick={() => gen("rephrase")} icon={iaLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />} disabled={iaLoading}>Reformuler</IABtn>
                 <IABtn onClick={() => gen("summary")}  icon={iaLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <AlignLeft className="h-3.5 w-3.5" />} disabled={iaLoading}>Résumer</IABtn>
+                <span className="w-px h-5 bg-border mx-1 self-center" />
+                <span className="text-[10px] text-muted-foreground self-center font-medium uppercase tracking-wider">Traduire</span>
+                {(["ar","fr","en"] as const).map(lang => (
+                  <button
+                    key={lang}
+                    onClick={async () => {
+                      if (!reply.trim()) return;
+                      setIaLoading(true);
+                      try {
+                        const { result } = await courriersApi.iaTraduire(reply, lang);
+                        if (result) setReply(result);
+                      } catch {}
+                      setIaLoading(false);
+                    }}
+                    disabled={iaLoading || !reply.trim()}
+                    className="inline-flex items-center gap-1 rounded-md border px-2 py-1.5 text-xs font-medium disabled:opacity-50 hover:bg-accent"
+                  >
+                    <Languages className="h-3 w-3" />
+                    {lang === "ar" ? "AR" : lang === "fr" ? "FR" : "EN"}
+                  </button>
+                ))}
               </div>
             </div>
             <textarea
