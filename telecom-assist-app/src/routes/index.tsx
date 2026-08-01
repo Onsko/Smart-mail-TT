@@ -23,8 +23,8 @@ function Landing() {
       {/* Hero */}
       <section className="relative bg-hero-gradient text-white overflow-hidden">
         <div className="absolute inset-0 bg-dot-pattern opacity-40" />
-        <header className="relative z-10 max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-10 py-6">
-          <Logo variant="light" />
+        <header className="relative z-20 max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-10 py-6">
+          <Logo variant="light" size={52} />
           <div className="flex items-center gap-3">
             <Link
               to="/login"
@@ -41,12 +41,12 @@ function Landing() {
           </div>
         </header>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-10 pt-10 lg:pt-16 pb-40 lg:pb-56 grid lg:grid-cols-[1fr_1.1fr] gap-10 items-center">
-          <div className="order-2 lg:order-1 flex justify-center lg:justify-start lg:-translate-x-16 xl:-translate-x-24">
+        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-10 pt-10 lg:pt-16 pb-40 lg:pb-56 grid lg:grid-cols-[1.3fr_1fr] xl:grid-cols-[1.8fr_1fr] 2xl:grid-cols-[1.9fr_1fr] gap-6 items-center">
+          <div className="order-2 lg:order-1 flex justify-center lg:justify-end lg:-ml-20 xl:-ml-32 2xl:-ml-40">
             <img
               src={logo}
               alt="Logo Tunisie Telecom"
-              className="w-[340px] sm:w-[420px] lg:w-[500px] xl:w-[560px] h-auto object-contain drop-shadow-2xl"
+              className="w-[460px] sm:w-[560px] lg:w-full max-w-[1100px] h-auto object-contain drop-shadow-2xl"
             />
           </div>
 
@@ -55,7 +55,7 @@ function Landing() {
               <span className="h-2 w-2 rounded-full bg-ai animate-pulse" />
               {t("landing.heroSubtitle")}
             </span>
-            <h1 className="mt-5 font-display font-extrabold text-white text-5xl sm:text-6xl lg:text-7xl leading-[0.95] tracking-tight">
+            <h1 className="mt-5 font-display font-extrabold text-white text-5xl sm:text-6xl lg:text-6xl 2xl:text-7xl leading-[0.95] tracking-tight">
               {t("landing.heroTitle")}
             </h1>
             <p className="mt-5 text-lg text-white/75 max-w-md">
@@ -122,7 +122,7 @@ function Landing() {
       <footer className="mt-24 border-t bg-white">
         <div className="max-w-7xl mx-auto px-6 lg:px-10 py-12 grid md:grid-cols-[1.4fr_1fr_1fr] gap-10">
           <div>
-            <Logo />
+            <Logo size={44} />
             <p className="mt-4 text-sm text-muted-foreground max-w-sm">
               {t("landing.footerDesc")}
             </p>

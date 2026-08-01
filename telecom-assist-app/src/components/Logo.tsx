@@ -1,4 +1,4 @@
-import logo from "@/assets/tt-logo.asset.json";
+import logo from "@/assets/tt-icon-Photoroom.png";
 
 interface Props {
   variant?: "light" | "dark";
@@ -13,10 +13,10 @@ export function Logo({ variant = "dark", size = 40, showWordmark = true, classNa
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <div
-        className="overflow-hidden rounded-lg bg-white shrink-0 ring-1 ring-black/5"
+        className="shrink-0"
         style={{ width: size, height: size }}
       >
-        <img src={logo.url} alt="Tunisie Telecom" className="h-full w-full object-cover" />
+        <img src={logo} alt="Tunisie Telecom" className="h-full w-full object-contain" />
       </div>
       {showWordmark && (
         <div className="leading-tight">
