@@ -207,7 +207,9 @@
       "objet": "الموضوع",
       "expediteur": "المرسل",
       "date": "التاريخ",
-      "statut": "الحالة"
+      "statut": "الحالة",
+      "loading": "جارٍ التحميل…",
+      "chartTitle": "النشاط — آخر 7 أيام"
     },
     "incoming": {
       "title": "بريد وارد جديد",
@@ -300,7 +302,13 @@
     "allPriorities": "كل الأولويات",
     "haute": "عالية",
     "moyenne": "متوسطة",
-    "basse": "منخفضة"
+    "basse": "منخفضة",
+    "enAttente": "قيد الانتظار",
+    "hautePriorite": "أولوية عالية",
+    "traites": "تمت المعالجة",
+    "repValider": "الردود للمصادقة",
+    "valider": "مصادقة",
+    "repartitionPriorite": "التوزيع حسب الأولوية"
   },
   "chef": {
     "title": "كانبان — مصلحتي",
@@ -309,7 +317,10 @@
     "aTraiter": "للمعالجة",
     "enCours": "قيد التقدم",
     "traites": "تمت المعالجة",
-    "empty": "لا يوجد بريد"
+    "empty": "لا يوجد بريد",
+    "totalService": "إجمالي المصلحة",
+    "chargeTitle": "الحصة حسب الموظف",
+    "nombreCourriers": "المراسلات النشطة"
   },
   "agent": {
     "title": "بريدي",
@@ -324,7 +335,15 @@
     "enCours": "قيد التقدم",
     "enAttente": "قيد الانتظار",
     "traite": "تمت المعالجة",
-    "cloture": "مغلق"
+    "cloture": "مغلق",
+    "totalAssignes": "الإجمالي المسند",
+    "urgent": "عاجل",
+    "repartitionStatut": "التوزيع حسب الحالة",
+    "nouveau": "جديد",
+    "a_traiter": "للمعالجة",
+    "a_valider": "للمصادقة",
+    "en_cours": "قيد التقدم",
+    "en_attente": "قيد الانتظار"
   },
   "admin": {
     "title": "الإدارة",
@@ -376,7 +395,8 @@
     "serviceLabel": "المصلحة",
     "saving": "جارٍ الإنشاء…",
     "save": "إنشاء الحساب",
-    "allRoles": "كل الأدوار"
+    "allRoles": "كل الأدوار",
+    "repartitionRoles": "المستخدمون حسب الدور"
   },
   "services": {
     "title": "الخدمات",

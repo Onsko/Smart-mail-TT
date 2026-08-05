@@ -207,7 +207,9 @@
       "objet": "Objet",
       "expediteur": "Expéditeur",
       "date": "Date",
-      "statut": "Statut"
+      "statut": "Statut",
+      "loading": "Chargement…",
+      "chartTitle": "Activité — 7 derniers jours"
     },
     "incoming": {
       "title": "Nouveau courrier entrant",
@@ -300,7 +302,13 @@
     "allPriorities": "Toutes priorités",
     "haute": "Haute",
     "moyenne": "Moyenne",
-    "basse": "Basse"
+    "basse": "Basse",
+    "enAttente": "En attente",
+    "hautePriorite": "Haute priorité",
+    "traites": "Traités",
+    "repValider": "Réponses à valider",
+    "valider": "Valider",
+    "repartitionPriorite": "Répartition par priorité"
   },
   "chef": {
     "title": "Kanban — Mon service",
@@ -309,7 +317,10 @@
     "aTraiter": "À traiter",
     "enCours": "En cours",
     "traites": "Traités",
-    "empty": "Aucun courrier"
+    "empty": "Aucun courrier",
+    "totalService": "Total service",
+    "chargeTitle": "Charge par agent",
+    "nombreCourriers": "Courriers actifs"
   },
   "agent": {
     "title": "Mes courriers",
@@ -324,7 +335,15 @@
     "enCours": "En cours",
     "enAttente": "En attente",
     "traite": "Traité",
-    "cloture": "Clôturé"
+    "cloture": "Clôturé",
+    "totalAssignes": "Total assignés",
+    "urgent": "Urgent",
+    "repartitionStatut": "Répartition par statut",
+    "nouveau": "Nouveau",
+    "a_traiter": "À traiter",
+    "a_valider": "À valider",
+    "en_cours": "En cours",
+    "en_attente": "En attente"
   },
   "admin": {
     "title": "Administration",
@@ -376,7 +395,8 @@
     "serviceLabel": "Service",
     "saving": "Création…",
     "save": "Créer le compte",
-    "allRoles": "Tous les rôles"
+    "allRoles": "Tous les rôles",
+    "repartitionRoles": "Utilisateurs par rôle"
   },
   "services": {
     "title": "Services",

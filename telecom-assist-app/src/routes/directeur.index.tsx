@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Inbox, AlertTriangle, Building2, CheckCircle2 } from "lucide-react";
+import { Inbox, AlertTriangle, Building2, CheckCircle2, Send, MailCheck } from "lucide-react";
 import { DataTable, type Column } from "@/components/DataTable";
 import { courriersApi, type Courrier, type DashboardStatsData } from "@/lib/api";
 import { PriorityBadge } from "@/components/StatusBadge";
@@ -18,16 +18,17 @@ function DirecteurPage() {
   const navigate = useNavigate();
   const [prio, setPrio] = useState("");
   const [courriers, setCourriers] = useState<Courrier[]>([]);
+  const [validations, setValidations] = useState<Courrier[]>([]);
   const [stats, setStats] = useState<DashboardStatsData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    Promise.all([
-      courriersApi.getPendingForDirector(),
-      courriersApi.getStats(),
-    ])
-      .then(([list, s]) => { setCourriers(list); setStats(s); })
-      .catch(() => { setCourriers([]); setStats(null); })
+useEffect(() => {
+    setLoading(true);
+    // Each call is independent: a failure of one (e.g. endpoint not yet deployed)
+    // must not blank the whole dashboard.
+    courriersApi.getPendingForDirector().then(setCourriers).catch(() => setCourriers([]));
+    courriersApi.getResponsesForValidation().then(setValidations).catch(() => setValidations([]));
+    courriersApi.getStats().then(setStats).catch(() => setStats(null))
       .finally(() => setLoading(false));
   }, []);
 
@@ -42,6 +43,7 @@ function DirecteurPage() {
     { label: t("directeur.hautePriorite"), value: hautesPrio.length, icon: <AlertTriangle className="h-5 w-5" />, color: "bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400" },
     { label: t("directeur.nonAffecte"), value: sansService.length, icon: <Building2 className="h-5 w-5" />, color: "bg-ai/30 text-amber-700" },
     { label: t("directeur.traites") || "Traités", value: traitesMois, icon: <CheckCircle2 className="h-5 w-5" />, color: "bg-success/15 text-teal-700" },
+    { label: t("directeur.repValider") || "Réponses à valider", value: validations.length, icon: <Send className="h-5 w-5" />, color: "bg-ai/20 text-amber-700" },
   ];
 
   const priorityData = [
@@ -98,6 +100,39 @@ function DirecteurPage() {
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {validations.length > 0 && (
+        <div className="rounded-xl bg-card border p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <MailCheck className="h-5 w-5 text-primary-bright" />
+              <h3 className="font-display text-lg font-semibold">{t("directeur.repValider") || "Réponses en attente de validation"}</h3>
+            </div>
+            <span className="rounded-full bg-ai/20 text-amber-800 text-xs font-semibold px-2.5 py-1">{validations.length}</span>
+          </div>
+          <div className="space-y-2">
+            {validations.map(v => (
+              <button
+                key={v._id}
+                onClick={() => navigate({ to: "/directeur/courrier/$id", params: { id: v._id } })}
+                className="w-full flex items-center justify-between gap-3 rounded-lg border bg-background px-4 py-3 text-left hover:border-primary/50 transition-colors"
+              >
+                <div className="min-w-0">
+                  <div className="text-xs font-mono text-muted-foreground">{v.reference}</div>
+                  <div className="font-medium truncate">{v.objet}</div>
+                  <div className="text-xs text-muted-foreground truncate">
+                    {v.service?.name || t("directeur.nonAffecte")}
+                    {v.agentAssigne ? ` • ${v.agentAssigne.prenom} ${v.agentAssigne.nom}` : ""}
+                  </div>
+                </div>
+                <span className="shrink-0 inline-flex items-center gap-1.5 rounded-md bg-primary text-primary-foreground px-3 py-1.5 text-xs font-medium">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> {t("directeur.valider") || "Valider"}
+                </span>
+              </button>
+            ))}
           </div>
         </div>
       )}

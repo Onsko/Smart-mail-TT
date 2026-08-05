@@ -131,7 +131,7 @@ export type CourrierType = 'ENTRANT' | 'SORTANT';
 export type CourrierCategorie = 'RECLAMATION' | 'DEMANDE' | 'FACTURE' | 'INFORMATION' | 'AUTRE';
 export type CourrierDomaine = 'TECHNIQUE' | 'RH' | 'FINANCE' | 'COMMERCIAL' | 'AUTRE';
 export type CourrierPriorite = 'HAUTE' | 'MOYENNE' | 'BASSE';
-export type CourrierStatut = 'NOUVEAU' | 'A_AFFECTER' | 'A_TRAITER' | 'EN_COURS' | 'TRAITE' | 'REJETE' | 'EN_ATTENTE' | 'CLOTURE';
+export type CourrierStatut = 'NOUVEAU' | 'A_AFFECTER' | 'A_TRAITER' | 'EN_COURS' | 'A_VALIDER' | 'EN_ATTENTE_VALIDATION' | 'TRAITE' | 'REJETE' | 'EN_ATTENTE' | 'CLOTURE';
 
 export interface CreateCourrierPayload {
   type: CourrierType;
@@ -332,6 +332,12 @@ export const courriersApi = {
       body: JSON.stringify({ url, mimeType }),
     }),
   getPendingForDirector: () => request<Courrier[]>('/courriers/directeur/pending'),
+  getResponsesForValidation: () => request<Courrier[]>('/courriers/directeur/validations'),
+  confirmReponse: (id: string, approuver: boolean) =>
+    request<Courrier>(`/courriers/${id}/confirmer-reponse`, {
+      method: 'POST',
+      body: JSON.stringify({ approuver }),
+    }),
   getRecommendations: (id: string) => request<Recommendation>(`/courriers/${id}/recommandations`),
   reanalyserOllama: (id: string) => request<Recommendation>(`/courriers/${id}/reanalyser-ollama`, { method: 'POST' }),
   assignService: (id: string, service: string, agentAssigne?: string) =>

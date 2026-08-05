@@ -162,6 +162,19 @@ export class CourriersController {
     return this.courriersService.findPendingForDirector();
   }
 
+  @Get('directeur/validations')
+  @Roles(Role.DIRECTEUR, Role.SUPER_ADMIN)
+  async findResponsesToValidate() {
+    return this.courriersService.findResponsesToValidate();
+  }
+
+  @Post(':id/confirmer-reponse')
+  @Roles(Role.DIRECTEUR, Role.SUPER_ADMIN)
+  async confirmReponse(@Param('id') id: string, @Body() body: { approuver: boolean }, @Req() req: Request) {
+    const user = req.user as { _id: { toString: () => string } };
+    return this.courriersService.confirmReponse(id, body.approuver, user._id.toString());
+  }
+
   @Get('chef/mes-courriers')
   @Roles(Role.CHEF, Role.SUPER_ADMIN)
   async findForChef(@Req() req: Request) {

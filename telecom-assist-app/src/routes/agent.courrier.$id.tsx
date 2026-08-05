@@ -60,7 +60,7 @@ function AgentCourrierDetail() {
     try {
       const updated = await courriersApi.saveReponse(courrier._id, reply, envoyer);
       setCourrier(updated);
-      showToast(envoyer ? "Réponse envoyée — courrier marqué comme traité" : "Brouillon enregistré");
+      showToast(envoyer ? "Réponse soumise — en attente de validation par le directeur" : "Brouillon enregistré");
     } catch {
       showToast("Erreur lors de l'enregistrement de la réponse");
     } finally {
@@ -243,7 +243,7 @@ function AgentCourrierDetail() {
                 disabled={savingReponse}
                 className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium disabled:opacity-60"
               >
-                {savingReponse ? "Envoi…" : "Envoyer"}
+                {savingReponse ? "Envoi…" : "Soumettre pour validation"}
               </button>
             </div>
           </div>

@@ -207,7 +207,9 @@
       "objet": "Subject",
       "expediteur": "Sender",
       "date": "Date",
-      "statut": "Status"
+      "statut": "Status",
+      "loading": "Loading...",
+      "chartTitle": "Activity - Last 7 days"
     },
     "incoming": {
       "title": "New incoming mail",
@@ -300,7 +302,13 @@
     "allPriorities": "All priorities",
     "haute": "High",
     "moyenne": "Medium",
-    "basse": "Low"
+    "basse": "Low",
+    "enAttente": "Pending",
+    "hautePriorite": "High priority",
+    "traites": "Processed",
+    "repValider": "Responses to validate",
+    "valider": "Validate",
+    "repartitionPriorite": "Distribution by priority"
   },
   "chef": {
     "title": "Kanban — My service",
@@ -309,7 +317,10 @@
     "aTraiter": "To process",
     "enCours": "In progress",
     "traites": "Processed",
-    "empty": "No mail"
+    "empty": "No mail",
+    "totalService": "Service total",
+    "chargeTitle": "Load per agent",
+    "nombreCourriers": "Active mails"
   },
   "agent": {
     "title": "My mail",
@@ -324,7 +335,15 @@
     "enCours": "In progress",
     "enAttente": "Pending",
     "traite": "Processed",
-    "cloture": "Closed"
+    "cloture": "Closed",
+    "totalAssignes": "Total assigned",
+    "urgent": "Urgent",
+    "repartitionStatut": "Distribution by status",
+    "nouveau": "New",
+    "a_traiter": "To process",
+    "a_valider": "To validate",
+    "en_cours": "In progress",
+    "en_attente": "Pending"
   },
   "admin": {
     "title": "Administration",
@@ -376,7 +395,8 @@
     "serviceLabel": "Service",
     "saving": "Creating…",
     "save": "Create account",
-    "allRoles": "All roles"
+    "allRoles": "All roles",
+    "repartitionRoles": "Users by role"
   },
   "services": {
     "title": "Services",

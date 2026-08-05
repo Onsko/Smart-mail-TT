@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { courriersApi, servicesApi, type Courrier, type Service, type Recommendation } from "@/lib/api";
 import { AIPanel } from "@/components/AIPanel";
 import { PriorityBadge, StatusBadge } from "@/components/StatusBadge";
-import { FileText, Clock, ArrowRight, CheckCircle2, Loader2, Brain, Sparkles } from "lucide-react";
+import { FileText, Clock, ArrowRight, CheckCircle2, Loader2, Brain, Sparkles, Send, XCircle } from "lucide-react";
 
 export const Route = createFileRoute("/directeur/courrier/$id")({
   component: CourrierDetail,
@@ -17,6 +17,7 @@ function statusToBadge(status: string): any {
     A_AFFECTER: "en_attente",
     A_TRAITER: "en_cours",
     EN_COURS: "en_cours",
+    A_VALIDER: "en_attente",
     TRAITE: "traite",
     REJETE: "en_attente",
     EN_ATTENTE: "en_attente",
@@ -34,6 +35,7 @@ function CourrierDetail() {
   const [selectedAgent, setSelectedAgent] = useState("");
   const [selectedPriority, setSelectedPriority] = useState<Courrier["priorite"]>("MOYENNE");
   const [loading, setLoading] = useState(true);
+  const [confirming, setConfirming] = useState(false);
   const [saving, setSaving] = useState(false);
   const [reanalyzing, setReanalyzing] = useState(false);
   const [ollamaAvailable, setOllamaAvailable] = useState(false);
@@ -97,6 +99,25 @@ function CourrierDetail() {
     }
   }
 
+  async function handleConfirmerReponse(approuver: boolean) {
+    setConfirming(true);
+    setMessage(null);
+    try {
+      const updated = await courriersApi.confirmReponse(id, approuver);
+      setCourrier(updated);
+      setMessage({
+        type: "success",
+        text: approuver
+          ? "Réponse approuvée — elle est maintenant envoyée au client (courrier traité)."
+          : "Réponse renvoyée à l'agent pour modification.",
+      });
+    } catch (err) {
+      setMessage({ type: "error", text: err instanceof Error ? err.message : "Erreur lors de la validation" });
+    } finally {
+      setConfirming(false);
+    }
+  }
+
   if (loading) return <div className="p-6 text-sm text-muted-foreground">Chargement…</div>;
   if (!courrier) return <div className="p-6 text-sm text-destructive">Courrier introuvable.</div>;
 
@@ -133,6 +154,56 @@ function CourrierDetail() {
               {courrier.contenu || "Aucun contenu disponible."}
             </div>
           </div>
+
+          {(courrier.reponse || courrier.reponseEnvoyee) && (
+            <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+              <div className="bg-muted/50 px-4 py-2 flex items-center justify-between text-xs text-muted-foreground border-b">
+                <span className="flex items-center gap-2"><Send className="h-4 w-4" /> Réponse de l'agent</span>
+                {courrier.reponseEnvoyee ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-success/15 text-teal-700 px-2 py-0.5 font-medium">
+                    <CheckCircle2 className="h-3 w-3" /> Envoyée au client
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-ai/20 text-amber-700 px-2 py-0.5 font-medium">
+                    En attente de validation
+                  </span>
+                )}
+              </div>
+              <div className="p-4 text-sm whitespace-pre-wrap">
+                {courrier.reponse || "Aucune réponse rédigée."}
+              </div>
+            </div>
+          )}
+
+          {courrier.statut === "A_VALIDER" && !courrier.reponseEnvoyee && (
+            <div className="rounded-xl border bg-card p-5 space-y-3">
+              <div className="text-sm font-semibold flex items-center gap-2">
+                <Send className="h-4 w-4" /> Décision de validation de la réponse
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Vérifiez le contenu du courrier, le circuit et la réponse de l'agent avant d'autoriser
+                l'envoi au client.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => handleConfirmerReponse(true)}
+                  disabled={confirming}
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-success text-white px-4 py-2.5 text-sm font-semibold disabled:opacity-60"
+                >
+                  {confirming ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                  Approuver et envoyer au client
+                </button>
+                <button
+                  onClick={() => handleConfirmerReponse(false)}
+                  disabled={confirming}
+                  className="inline-flex items-center justify-center gap-2 rounded-md border border-destructive/40 text-destructive px-4 py-2.5 text-sm font-medium disabled:opacity-60 hover:bg-destructive/10"
+                >
+                  <XCircle className="h-4 w-4" />
+                  Rejeter (retour à l'agent)
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="rounded-xl border bg-card p-5">
             <div className="text-sm font-semibold mb-3">Historique</div>

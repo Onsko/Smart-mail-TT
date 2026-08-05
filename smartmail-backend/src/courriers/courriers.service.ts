@@ -695,12 +695,11 @@ export class CourriersService {
   }
 
   async saveReponse(courrierId: string, reponse: string, envoyer: boolean, userId: string): Promise<CourrierDocument> {
-    const update: any = {
-      reponse,
-      reponseEnvoyee: envoyer,
-    };
+    const update: any = { reponse, reponseEnvoyee: false };
     if (envoyer) {
-      update.statut = 'TRAITE';
+      // L'agent soumet sa réponse : elle ne part PAS encore au client, elle est
+      // mise en attente de validation par le directeur général (dernier étage).
+      update.statut = CourrierStatut.A_VALIDER;
     }
     const courrier = await this.courrierModel
       .findByIdAndUpdate(
@@ -709,7 +708,9 @@ export class CourriersService {
           ...update,
           $push: {
             historique: {
-              action: envoyer ? 'Réponse envoyée par l\'agent' : 'Brouillon enregistré par l\'agent',
+              action: envoyer
+                ? 'Réponse soumise par l\'agent — en attente de validation du directeur'
+                : 'Brouillon enregistré par l\'agent',
               date: new Date(),
               user: new Types.ObjectId(userId),
             },
@@ -723,6 +724,95 @@ export class CourriersService {
     if (!courrier) {
       throw new NotFoundException('Courrier introuvable');
     }
+
+    // Notifier tous les directeurs qu'une réponse attend leur validation.
+    if (envoyer) {
+      const directeurs = await this.userModel
+        .find({ role: Role.DIRECTEUR, actif: true })
+        .select('_id')
+        .exec();
+      if (directeurs.length > 0) {
+        await this.notificationsService.createForUsers(
+          directeurs.map((d) => d._id.toString()),
+          `Réponse prête à valider — ${courrier.objet} (${courrier.reference})`,
+          'REPONSE_A_VALIDER',
+          courrierId,
+        );
+      }
+    }
+
     return courrier;
+  }
+
+  // Courriers dont la réponse de l'agent attend l'approbation du directeur.
+  async findResponsesToValidate(): Promise<CourrierDocument[]> {
+    return this.courrierModel
+      .find({
+        statut: CourrierStatut.A_VALIDER,
+        reponseEnvoyee: false,
+      })
+      .populate('service', 'code name')
+      .populate('agentAssigne', 'nom prenom email')
+      .populate('createdBy', 'nom prenom')
+      .sort({ updatedAt: -1 })
+      .exec();
+  }
+
+  // Décision finale du directeur : approuver l'envoi au client ou rejeter.
+  async confirmReponse(courrierId: string, approuver: boolean, userId: string): Promise<CourrierDocument> {
+    const courrier = await this.courrierModel.findById(courrierId).exec();
+    if (!courrier) {
+      throw new NotFoundException('Courrier introuvable');
+    }
+    if (courrier.statut !== CourrierStatut.A_VALIDER) {
+      throw new BadRequestException('Ce courrier n\'attend pas la validation d\'une réponse.');
+    }
+
+    const update: any = approuver
+      ? { reponseEnvoyee: true, statut: CourrierStatut.TRAITE }
+      : { reponseEnvoyee: false, statut: CourrierStatut.EN_COURS };
+
+    // Capturer l'id de l'agent AVANT populate : courrier.agentAssigne est un ObjectId,
+    // alors que updated.agentAssigne est un objet peuplé (pas un ObjectId).
+    const agentId = courrier.agentAssigne;
+
+    const updated = await this.courrierModel
+      .findByIdAndUpdate(
+        courrierId,
+        {
+          ...update,
+          $push: {
+            historique: {
+              action: approuver
+                ? 'Réponse approuvée et envoyée au client par le directeur'
+                : 'Réponse renvoyée à l\'agent par le directeur (rejetée pour modification)',
+              date: new Date(),
+              user: new Types.ObjectId(userId),
+            },
+          },
+        },
+        { new: true },
+      )
+      .populate('service', 'code name')
+      .populate('agentAssigne', 'nom prenom email')
+      .populate('createdBy', 'nom prenom')
+      .exec();
+    if (!updated) {
+      throw new NotFoundException('Courrier introuvable');
+    }
+
+    // Prévenir l'agent du résultat de la validation.
+    if (agentId) {
+      await this.notificationsService.createForUser(
+        agentId.toString(),
+        approuver
+          ? `Votre réponse pour ${updated.reference} a été approuvée et envoyée au client.`
+          : `Votre réponse pour ${updated.reference} a été retournée pour modification par le directeur.`,
+        'REPONSE_VALIDEE',
+        courrierId,
+      );
+    }
+
+    return updated;
   }
 }
