@@ -21,6 +21,125 @@ function SuiviPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/;
+
+  function hasArabic(parts: (string | undefined)[]): boolean {
+    return arabicRegex.test(parts.filter(Boolean).join(" "));
+  }
+
+  function addText(doc: any, text: string, fontSize: number, y: number, isBold = false, color = "#000000") {
+    doc.setFontSize(fontSize);
+    doc.setFont("helvetica", isBold ? "bold" : "normal");
+    doc.setTextColor(color);
+    const margin = 20;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const maxWidth = pageWidth - 2 * margin;
+    const lines = doc.splitTextToSize(text, maxWidth);
+    doc.text(lines, margin, y);
+    return y + (lines.length * fontSize * 0.35) + 5;
+  }
+
+  async function generateTextPdf(result: TrackedCourrier) {
+    const { jsPDF } = await import("jspdf");
+    const doc = new jsPDF();
+    const margin = 20;
+    let y = margin;
+    y = addText(doc, result.reference, 10, y, false, "#666666");
+    y += 5;
+    y = addText(doc, result.objet, 16, y, true, "#1e40af");
+    y += 10;
+    y = addText(doc, `${t("tracking.sender")} ${result.correspondant || "—"}`, 11, y);
+    y = addText(doc, `${t("tracking.service")} ${result.service?.name || "—"}`, 11, y);
+    y = addText(doc, `${t("tracking.date")} ${new Date(result.createdAt).toLocaleDateString("fr-FR")}`, 11, y);
+    y += 10;
+    y = addText(doc, result.reponse || t("tracking.noResponse"), 12, y);
+    y += 20;
+    doc.setDrawColor("#cccccc");
+    doc.line(margin, y, doc.internal.pageSize.getWidth() - margin, y);
+    y += 10;
+    y = addText(doc, `${t("tracking.pdfFooter")} ${new Date().toLocaleString("fr-FR")}`, 9, y, false, "#999999");
+    doc.save(`reponse-${result.reference}.pdf`);
+  }
+
+  async function generateHtmlPdf(result: TrackedCourrier) {
+    const html2pdf = (await import("html2pdf.js")).default;
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "absolute";
+    iframe.style.left = "-9999px";
+    iframe.style.top = "0";
+    iframe.style.width = "800px";
+    iframe.style.height = "600px";
+    iframe.style.border = "none";
+    document.body.appendChild(iframe);
+
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!iframeDoc) throw new Error("Cannot access iframe document");
+
+    iframeDoc.open();
+    iframeDoc.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: Arial, 'Segoe UI', Tahoma, sans-serif; background: #ffffff; color: #333; }
+          .container { max-width: 700px; margin: 0; padding: 20px; direction: rtl; text-align: right; }
+          .container:dir(rtl) { direction: rtl; text-align: right; }
+          .reference { font-size: 12px; color: #666; font-family: monospace; margin-bottom: 15px; }
+          .title { font-size: 18px; color: #1e40af; margin-bottom: 15px; font-weight: bold; }
+          .meta { font-size: 13px; color: #555; margin-bottom: 20px; line-height: 1.4; }
+          .content { font-size: 14px; line-height: 1.8; margin: 20px 0; white-space: pre-wrap; }
+          .footer { margin-top: 40px; font-size: 11px; color: #999; border-top: 1px solid #ccc; padding-top: 10px; }
+          strong { font-weight: bold; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="reference">${result.reference}</div>
+          <h1 class="title">${result.objet}</h1>
+          <div class="meta">
+            <strong>${t("tracking.sender")}</strong> ${result.correspondant || "—"}<br/>
+            <strong>${t("tracking.service")}</strong> ${result.service?.name || "—"}<br/>
+            <strong>${t("tracking.date")}</strong> ${new Date(result.createdAt).toLocaleDateString("fr-FR")}
+          </div>
+          <div class="content">${(result.reponse || t("tracking.noResponse")).replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+          <div class="footer">
+            <strong>Tunisie Telecom</strong> — ${t("tracking.pdfFooter")} ${new Date().toLocaleString("fr-FR")}
+          </div>
+        </div>
+      </body>
+      </html>
+    `);
+    iframeDoc.close();
+
+    await new Promise((resolve) => {
+      iframe.onload = resolve;
+      setTimeout(resolve, 100);
+    });
+
+    const options = {
+      margin: [15, 15, 15, 15],
+      filename: `reponse-${result.reference}.pdf`,
+      image: { type: "jpeg", quality: 0.95 },
+      html2canvas: {
+        scale: 2,
+        useCORS: false,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        ignoreElements: (element: any) =>
+          element.tagName === "SCRIPT" || element.tagName === "LINK",
+      },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    };
+
+    await html2pdf().set(options).from(iframeDoc.body).save();
+
+    if (iframe.parentNode === document.body) {
+      document.body.removeChild(iframe);
+    }
+  }
+
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     if (!ref.trim()) return;
@@ -125,152 +244,15 @@ function SuiviPage() {
               <button
                 onClick={async () => {
                   try {
-                    // Simple approach: Use jsPDF directly without html2canvas
-                    const { jsPDF } = await import('jspdf');
-                    const doc = new jsPDF();
-                    
-                    // Set up the document
-                    const margin = 20;
-                    const pageWidth = doc.internal.pageSize.getWidth();
-                    const maxWidth = pageWidth - (2 * margin);
-                    let y = margin;
-                    
-                    // Helper function to add text with line breaks
-                    const addText = (text: string, fontSize: number = 12, isBold: boolean = false, color: string = '#000000') => {
-                      doc.setFontSize(fontSize);
-                      doc.setFont('helvetica', isBold ? 'bold' : 'normal');
-                      doc.setTextColor(color);
-                      
-                      const lines = doc.splitTextToSize(text, maxWidth);
-                      doc.text(lines, margin, y);
-                      y += (lines.length * fontSize * 0.35) + 5;
-                    };
-                    
-                    // Add content
-                    addText(result.reference, 10, false, '#666666');
-                    y += 5;
-                    
-                    addText(result.objet, 16, true, '#1e40af');
-                    y += 10;
-                    
-                    addText(`${t("tracking.sender")} ${result.correspondant || "—"}`, 11);
-                    addText(`${t("tracking.service")} ${result.service?.name || "—"}`, 11);
-                    addText(`${t("tracking.date")} ${new Date(result.createdAt).toLocaleDateString("fr-FR")}`, 11);
-                    y += 10;
-                    
-                    // Add response content
-                    const reponseText = result.reponse || t("tracking.noResponse");
-                    addText(reponseText, 12);
-                    
-                    // Add footer
-                    y += 20;
-                    doc.setDrawColor('#cccccc');
-                    doc.line(margin, y, pageWidth - margin, y);
-                    y += 10;
-                    
-                    addText(`${t("tracking.pdfFooter")} ${new Date().toLocaleString("fr-FR")}`, 9, false, '#999999');
-                    
-                    // Save the PDF
-                    doc.save(`reponse-${result.reference}.pdf`);
-                    
+                    if (hasArabic([result.objet, result.reponse, result.correspondant, result.service?.name])) {
+                      await generateHtmlPdf(result);
+                    } else {
+                      await generateTextPdf(result);
+                    }
                   } catch (error) {
                     console.error(t("tracking.pdfError"), error);
-                    
-                    // Fallback: Try the iframe approach
                     try {
-                      const html2pdf = (await import('html2pdf.js')).default;
-                      
-                      // Create a completely isolated iframe for PDF generation
-                      const iframe = document.createElement('iframe');
-                      iframe.style.position = 'absolute';
-                      iframe.style.left = '-9999px';
-                      iframe.style.top = '0';
-                      iframe.style.width = '800px';
-                      iframe.style.height = '600px';
-                      iframe.style.border = 'none';
-                      
-                      document.body.appendChild(iframe);
-                      
-                      // Write clean HTML to iframe
-                      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-                      if (!iframeDoc) throw new Error('Cannot access iframe document');
-                      
-                      iframeDoc.open();
-                      iframeDoc.write(`
-                        <!DOCTYPE html>
-                        <html>
-                        <head>
-                          <meta charset="utf-8">
-                          <style>
-                            * { margin: 0; padding: 0; box-sizing: border-box; }
-                            body { font-family: Arial, sans-serif; background: #ffffff; color: #333; }
-                            .container { max-width: 700px; margin: 0; padding: 20px; }
-                            .reference { font-size: 12px; color: #666; font-family: monospace; margin-bottom: 15px; }
-                            .title { font-size: 18px; color: #1e40af; margin-bottom: 15px; font-weight: bold; }
-                            .meta { font-size: 13px; color: #555; margin-bottom: 20px; line-height: 1.4; }
-                            .content { font-size: 14px; line-height: 1.6; margin: 20px 0; white-space: pre-wrap; }
-                            .footer { margin-top: 40px; font-size: 11px; color: #999; border-top: 1px solid #ccc; padding-top: 10px; }
-                            strong { font-weight: bold; }
-                          </style>
-                        </head>
-                        <body>
-                          <div class="container">
-                            <div class="reference">${result.reference}</div>
-                            <h1 class="title">${result.objet}</h1>
-                            <div class="meta">
-                              <strong>${t("tracking.sender")}</strong> ${result.correspondant || "—"}<br/>
-                              <strong>${t("tracking.service")}</strong> ${result.service?.name || "—"}<br/>
-                              <strong>${t("tracking.date")}</strong> ${new Date(result.createdAt).toLocaleDateString("fr-FR")}
-                            </div>
-                            <div class="content">${(result.reponse || t("tracking.noResponse")).replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
-                            <div class="footer">
-                              <strong>Tunisie Telecom</strong> — ${t("tracking.pdfFooter")} ${new Date().toLocaleString("fr-FR")}
-                            </div>
-                          </div>
-                        </body>
-                        </html>
-                      `);
-                      iframeDoc.close();
-                      
-                      // Wait for iframe to load
-                      await new Promise((resolve) => {
-                        iframe.onload = resolve;
-                        setTimeout(resolve, 100); // Fallback
-                      });
-                      
-                      // Configure html2pdf with iframe-specific settings
-                      const options = {
-                        margin: [15, 15, 15, 15],
-                        filename: `reponse-${result.reference}.pdf`,
-                        image: { 
-                          type: 'jpeg', 
-                          quality: 0.95 
-                        },
-                        html2canvas: { 
-                          scale: 2,
-                          useCORS: false,
-                          allowTaint: true,
-                          backgroundColor: '#ffffff',
-                          ignoreElements: (element: any) => {
-                            // Ignore any elements that might cause issues
-                            return element.tagName === 'SCRIPT' || element.tagName === 'LINK';
-                          }
-                        },
-                        jsPDF: { 
-                          unit: 'mm', 
-                          format: 'a4', 
-                          orientation: 'portrait' 
-                        }
-                      };
-                      
-                      // Generate PDF from iframe content
-                      await html2pdf().set(options).from(iframeDoc.body).save();
-                      
-                      // Clean up iframe
-                      if (iframe.parentNode === document.body) {
-                        document.body.removeChild(iframe);
-                      }
-                      
+                      await generateHtmlPdf(result);
                     } catch (fallbackError) {
                       console.error(t("tracking.pdfError"), fallbackError);
                       alert(t("tracking.pdfError"));
